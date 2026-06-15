@@ -119,10 +119,9 @@ void Menu::sidebar(Render2D& r, float x, float y, float w, float h)
     r.GradientBox(x + 1, Y(y + 1), w - 1, h - 2, C(t.sideTop), C(t.sideBot), true, 5);
     r.BoxFilled(x + w, Y(y + 8), 1, h - 16, C(t.line)); // divider
 
-    // logo
-    r.RoundedBox(x + 16, Y(y + 18), 16, 16, 3, C(t.accent));
-    r.TextLMid(x + 40, Y(y + 18 + 8), "jazzhook", C(t.text), 2);
-    r.TextLMid(x + 40, Y(y + 42), "hvh legacy", C(t.textFaint), 1);
+    // wordmark
+    r.TextLMid(x + 16, Y(y + 18 + 8), "jazzhook", C(t.text), 2);
+    r.TextLMid(x + 16, Y(y + 42), "hvh legacy", C(t.textFaint), 1);
     r.BoxFilled(x + 16, Y(y + 54), w - 32, 1, C(t.lineSoft));
 
     // vertical nav
@@ -141,8 +140,7 @@ void Menu::sidebar(Render2D& r, float x, float y, float w, float h)
 
     // bottom user strip
     r.BoxFilled(x + 16, Y(y + h - 40), w - 32, 1, C(t.lineSoft));
-    r.CircleFilled(x + 20, Y(y + h - 24), 2.5f, C(t.good));
-    r.TextLMid(x + 30, Y(y + h - 24), "skippy", C(t.textDim), 1);
+    r.TextLMid(x + 16, Y(y + h - 24), "skippy", C(t.textDim), 1);
     r.TextRMid(x + w - 16, Y(y + h - 24), "build 06.15", C(t.textFaint), 1);
 }
 
