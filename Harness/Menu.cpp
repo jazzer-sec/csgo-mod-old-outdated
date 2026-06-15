@@ -31,37 +31,22 @@ void Menu::Draw(Render2D& r, float openT)
     const float lx = bodyX, rx = bodyX + colW + colGap;
     const float by0 = y + 54;
 
-    // left column
-    float lcy = container(r, lx, by0, colW, 134, "aimbot");
-    lcy = rowCheck (r, lx, lcy, colW, "enabled", true);
-    lcy = rowSlider(r, lx, lcy, colW, "minimum damage", 0.35f, "35");
-    float targetY = lcy;
-    lcy = rowCombo (r, lx, lcy, colW, "target", "nearest");
-    lcy = rowCheck (r, lx, lcy, colW, "auto fire", true, "mouse5");
-
-    lcy = container(r, lx, by0 + 144, colW, 92, "accuracy");
-    lcy = rowCheck (r, lx, lcy, colW, "auto stop", true);
-    lcy = rowCheck (r, lx, lcy, colW, "auto scope", true);
-
-    // right column
-    float rcy = container(r, rx, by0, colW, 134, "exploits");
-    rcy = rowCheck (r, rx, rcy, colW, "double tap", true, "x");
-    rcy = rowCheck (r, rx, rcy, colW, "hide shots", true, "c");
-    rcy = rowSlider(r, rx, rcy, colW, "shift amount", 0.85f, "14t");
-
-    rcy = container(r, rx, by0 + 144, colW, 92, "overrides");
-    rcy = rowSlider(r, rx, rcy, colW, "hitchance", 0.72f, "72%");
-    rcy = rowColor (r, rx, rcy, colW, "accent", t.accent);
+    switch (activeTab) {
+    case 0:  pageRage(r, lx, rx, colW, by0);     break;
+    case 1:  pageAntiAim(r, lx, rx, colW, by0);  break;
+    case 2:  pageVisuals(r, lx, rx, colW, by0);  break;
+    case 3:  pageMisc(r, lx, rx, colW, by0);     break;
+    default: pageConfigs(r, lx, rx, colW, by0);  break;
+    }
 
     // content footer (centered)
     r.BoxFilled(cx + pad, Y(y + h - 26), cw - pad * 2, 1, C(t.lineSoft));
     r.TextMid(cx + cw / 2.f, Y(y + h - 14), "right-click a control to bind a key", C(t.textFaint), 1);
 
-    // dropdown (interaction demo) under the target combo
-    if (comboOpen) {
+    // dropdown (interaction demo) under the rage "target" combo
+    if (comboOpen && activeTab == 0) {
         const char* opts[] = {"nearest", "lowest hp", "crosshair", "high damage"};
-        float bw = colW - 16 - 84, bx = lx + colW - 10 - bw, dy = Y(targetY) + 20, ih = 16;
-        if (bw < 96) bw = 96, bx = lx + colW - 10 - bw;
+        float bw = 96, bx = lx + colW - 12 - bw, dy = Y(comboAY) + 20, ih = 16;
         float dh = ih * 4 + 6;
         r.Shadow(bx, dy, bw, dh, 3, 9, C(t.shadow));
         r.RoundedBox(bx, dy, bw, dh, 3, C(t.field));
@@ -148,16 +133,131 @@ void Menu::contentHead(Render2D& r, float x, float y, float w, const std::string
 {
     const Theme& t = theme();
     r.TextLMid(x + 16, Y(y + 24), title, C(t.text), 2);
-    // weapon selector (right)
-    std::string val = "universal";
-    float bw = 110, bx = x + w - 16 - bw, bh = 17, byc = Y(y + 24);
-    r.RoundedBox(bx, byc - bh / 2, bw, bh, 3, C(t.field));
-    r.RoundedBoxOutline(bx, byc - bh / 2, bw, bh, 3, 1.f, C(t.line));
-    r.TextLMid(bx + 8, byc, val, C(t.textDim), 1);
-    float chx = bx + bw - 9;
-    r.Line(chx - 2.5f, byc - 1.5f, chx, byc + 1.5f, C(t.textDim), 1.1f);
-    r.Line(chx, byc + 1.5f, chx + 2.5f, byc - 1.5f, C(t.textDim), 1.1f);
+    // weapon selector (rage only)
+    if (activeTab == 0) {
+        std::string val = "universal";
+        float bw = 110, bx = x + w - 16 - bw, bh = 17, byc = Y(y + 24);
+        r.RoundedBox(bx, byc - bh / 2, bw, bh, 3, C(t.field));
+        r.RoundedBoxOutline(bx, byc - bh / 2, bw, bh, 3, 1.f, C(t.line));
+        r.TextLMid(bx + 8, byc, val, C(t.textDim), 1);
+        float chx = bx + bw - 9;
+        r.Line(chx - 2.5f, byc - 1.5f, chx, byc + 1.5f, C(t.textDim), 1.1f);
+        r.Line(chx, byc + 1.5f, chx + 2.5f, byc - 1.5f, C(t.textDim), 1.1f);
+    }
     r.BoxFilled(x + 16, Y(y + 44), w - 32, 1, C(t.line));
+}
+
+// ----------------------------------------------------------------------------
+// per-tab pages
+// ----------------------------------------------------------------------------
+void Menu::pageRage(Render2D& r, float lx, float rx, float colW, float by0)
+{
+    const Theme& t = theme();
+    float lcy = container(r, lx, by0, colW, 134, "aimbot");
+    lcy = rowCheck (r, lx, lcy, colW, "enabled", true);
+    lcy = rowSlider(r, lx, lcy, colW, "minimum damage", 0.35f, "35");
+    comboAY = lcy;
+    lcy = rowCombo (r, lx, lcy, colW, "target", "nearest");
+    lcy = rowCheck (r, lx, lcy, colW, "auto fire", true, "mouse5");
+
+    lcy = container(r, lx, by0 + 144, colW, 92, "accuracy");
+    lcy = rowCheck (r, lx, lcy, colW, "auto stop", true);
+    lcy = rowCheck (r, lx, lcy, colW, "auto scope", true);
+
+    float rcy = container(r, rx, by0, colW, 134, "exploits");
+    rcy = rowCheck (r, rx, rcy, colW, "double tap", true, "x");
+    rcy = rowCheck (r, rx, rcy, colW, "hide shots", true, "c");
+    rcy = rowSlider(r, rx, rcy, colW, "shift amount", 0.85f, "14t");
+
+    rcy = container(r, rx, by0 + 144, colW, 92, "overrides");
+    rcy = rowSlider(r, rx, rcy, colW, "hitchance", 0.72f, "72%");
+    rcy = rowColor (r, rx, rcy, colW, "accent", t.accent);
+}
+
+void Menu::pageAntiAim(Render2D& r, float lx, float rx, float colW, float by0)
+{
+    float lcy = container(r, lx, by0, colW, 120, "anti-aimbot");
+    lcy = rowCheck (r, lx, lcy, colW, "enabled", true);
+    lcy = rowCombo (r, lx, lcy, colW, "pitch", "down");
+    lcy = rowCombo (r, lx, lcy, colW, "yaw base", "backward");
+    lcy = rowCombo (r, lx, lcy, colW, "yaw jitter", "offset");
+
+    lcy = container(r, lx, by0 + 130, colW, 114, "desync");
+    lcy = rowSlider(r, lx, lcy, colW, "amount", 0.62f, "62");
+    lcy = rowCombo (r, lx, lcy, colW, "inverter", "switch");
+    lcy = rowSlider(r, lx, lcy, colW, "body lean", 0.40f, "40");
+
+    float rcy = container(r, rx, by0, colW, 100, "on shot");
+    rcy = rowCheck (r, rx, rcy, colW, "fake duck", true, "f");
+    rcy = rowCheck (r, rx, rcy, colW, "defensive aa", false);
+    rcy = rowCombo (r, rx, rcy, colW, "hide shots", "on key");
+
+    rcy = container(r, rx, by0 + 110, colW, 134, "manual");
+    rcy = rowCheck (r, rx, rcy, colW, "left", true, "left");
+    rcy = rowCheck (r, rx, rcy, colW, "right", true, "right");
+    rcy = rowCheck (r, rx, rcy, colW, "backward", true, "down");
+    rcy = rowCheck (r, rx, rcy, colW, "freestand", false, "alt");
+}
+
+void Menu::pageVisuals(Render2D& r, float lx, float rx, float colW, float by0)
+{
+    const Theme& t = theme();
+    float lcy = container(r, lx, by0, colW, 134, "players");
+    lcy = rowCheck (r, lx, lcy, colW, "enabled", true);
+    lcy = rowCombo (r, lx, lcy, colW, "boxes", "cornered");
+    lcy = rowCheck (r, lx, lcy, colW, "skeleton", true);
+    lcy = rowCheck (r, lx, lcy, colW, "health bar", true);
+
+    lcy = container(r, lx, by0 + 144, colW, 92, "effects");
+    lcy = rowCombo (r, lx, lcy, colW, "chams", "flat");
+    lcy = rowCheck (r, lx, lcy, colW, "hit marker", true);
+
+    float rcy = container(r, rx, by0, colW, 92, "world");
+    rcy = rowCheck (r, rx, rcy, colW, "remove scope", true);
+    rcy = rowColor (r, rx, rcy, colW, "esp color", t.accent);
+
+    rcy = container(r, rx, by0 + 102, colW, 134, "interface");
+    rcy = rowCheck (r, rx, rcy, colW, "watermark", true);
+    rcy = rowCheck (r, rx, rcy, colW, "keybinds", true);
+    rcy = rowCheck (r, rx, rcy, colW, "spectators", true);
+    rcy = rowCheck (r, rx, rcy, colW, "hit log", true);
+}
+
+void Menu::pageMisc(Render2D& r, float lx, float rx, float colW, float by0)
+{
+    float lcy = container(r, lx, by0, colW, 114, "movement");
+    lcy = rowCheck (r, lx, lcy, colW, "bunny hop", true);
+    lcy = rowCheck (r, lx, lcy, colW, "auto strafe", true);
+    lcy = rowCheck (r, lx, lcy, colW, "fast stop", true);
+
+    lcy = container(r, lx, by0 + 124, colW, 92, "automation");
+    lcy = rowCheck (r, lx, lcy, colW, "auto accept", true);
+    lcy = rowCheck (r, lx, lcy, colW, "auto pistol", true);
+
+    float rcy = container(r, rx, by0, colW, 114, "misc");
+    rcy = rowCheck (r, rx, rcy, colW, "anti aim-block", true);
+    rcy = rowCheck (r, rx, rcy, colW, "fake lag", true, "shift");
+    rcy = rowSlider(r, rx, rcy, colW, "fps boost", 0.50f, "med");
+
+    rcy = container(r, rx, by0 + 124, colW, 92, "camera");
+    rcy = rowCheck (r, rx, rcy, colW, "third person", false, "n");
+    rcy = rowCheck (r, rx, rcy, colW, "free cam", false, "m");
+}
+
+void Menu::pageConfigs(Render2D& r, float lx, float rx, float colW, float by0)
+{
+    float lcy = container(r, lx, by0, colW, 150, "local configs");
+    lcy = rowListItem(r, lx, lcy, colW, "hvh_main", true);
+    lcy = rowListItem(r, lx, lcy, colW, "legit", false);
+    lcy = rowListItem(r, lx, lcy, colW, "fakelag_heavy", false);
+    lcy = rowListItem(r, lx, lcy, colW, "backup_0614", false);
+    lcy = rowListItem(r, lx, lcy, colW, "default", false);
+
+    float rcy = container(r, rx, by0, colW, 150, "actions");
+    rcy = rowButton(r, rx, rcy, colW, "load", true);
+    rcy = rowButton(r, rx, rcy, colW, "save", false);
+    rcy = rowButton(r, rx, rcy, colW, "create new", false);
+    rcy = rowButton(r, rx, rcy, colW, "delete", false);
 }
 
 float Menu::container(Render2D& r, float x, float y, float w, float h, const std::string& title)
@@ -234,4 +334,28 @@ float Menu::rowColor(Render2D& r, float x, float y, float w, const std::string& 
     r.RoundedBox(sx, cyc - sh / 2, sw, sh, 3, C(c));
     r.RoundedBoxOutline(sx, cyc - sh / 2, sw, sh, 3, 1.f, C(t.line));
     return y + row;
+}
+
+float Menu::rowButton(Render2D& r, float x, float y, float w, const std::string& label, bool primary)
+{
+    const Theme& t = theme();
+    const float pad = 12, bh = 22;
+    float bx = x + pad, bw = w - pad * 2, by = Y(y + 3);
+    r.RoundedBox(bx, by, bw, bh, 3, C(primary ? t.accent : t.field));
+    if (!primary) r.RoundedBoxOutline(bx, by, bw, bh, 3, 1.f, C(t.line));
+    r.TextMid(bx + bw / 2, by + bh / 2, label, C(primary ? Color(20, 22, 24) : t.text), 1);
+    return y + bh + 8;
+}
+
+float Menu::rowListItem(Render2D& r, float x, float y, float w, const std::string& label, bool selected)
+{
+    const Theme& t = theme();
+    const float pad = 10, rh = 19;
+    float cyc = Y(y + rh / 2.f);
+    if (selected) {
+        r.RoundedBox(x + pad, Y(y + 1), w - pad * 2, rh - 2, 3, C(t.accent.withA(28)));
+        r.RoundedBox(x + pad, Y(y + 5), 2, rh - 10, 1, C(t.accent));
+    }
+    r.TextLMid(x + pad + 9, cyc, label, C(selected ? t.text : t.textDim), 1);
+    return y + rh;
 }

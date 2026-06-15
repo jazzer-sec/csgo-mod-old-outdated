@@ -54,16 +54,27 @@ int main() {
         r.savePNG("Harness/out/03_menu_interact.png");
     }
 
-    // 4) mid-open animation keyframe (fade + slide)
+    // 4..7) each tab's own page
+    const char* names[] = {nullptr, "04_antiaim", "05_visuals", "06_misc", "07_configs"};
+    for (int tab = 1; tab <= 4; ++tab) {
+        Render2D r(W, H);
+        scene(r);
+        dim(r, 1.f);
+        Menu m; m.activeTab = tab;
+        m.Draw(r, 1.f);
+        r.savePNG(std::string("Harness/out/") + names[tab] + ".png");
+    }
+
+    // 8) mid-open animation keyframe (fade + slide)
     {
         Render2D r(W, H);
         scene(r);
         dim(r, 0.55f);
-        Menu m; m.activeTab = 1;
+        Menu m; m.activeTab = 0;
         m.Draw(r, 0.55f);
-        r.savePNG("Harness/out/04_menu_opening.png");
+        r.savePNG("Harness/out/08_menu_opening.png");
     }
 
-    std::printf("wrote 4 frames to Harness/out/\n");
+    std::printf("wrote frames to Harness/out/\n");
     return 0;
 }
