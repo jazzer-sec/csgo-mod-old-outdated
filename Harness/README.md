@@ -10,10 +10,18 @@ code is written against that API, so porting into the real mod means swapping th
 backend (software framebuffer → DirectX 9), not rewriting the UI.
 
 ## Build & run
+Needs FreeType (for antialiased text). On Debian/Ubuntu: `apt install libfreetype-dev`.
 ```sh
-g++ -std=c++17 -O2 Harness/*.cpp -o /tmp/uiharness
+g++ -std=c++17 -O2 Harness/*.cpp $(pkg-config --cflags --libs freetype2) -o /tmp/uiharness
 ./uiharness            # writes Harness/out/*.png
 ```
+
+## Style
+gamesense-inspired: horizontal icon tab bar, text sub-tabs, dense multi-column
+containers, single yellow accent, flat 1px framing. Text is rendered with
+FreeType using **DejaVu Sans** as a Verdana-11 stand-in (Verdana is proprietary;
+DejaVu is the closest free analog). In the real mod the embedded Verdana atlas
+drops in behind the same `Text()` API.
 
 ## Files
 - `PngWriter.h`  — minimal PNG encoder (stored-deflate, CRC32/Adler32). No deps.

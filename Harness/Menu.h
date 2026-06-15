@@ -1,37 +1,38 @@
 #pragma once
 #include "Render2D.h"
+#include <string>
 
-// Menu — the custom animated menu, drawn entirely through the CRender-style
-// Render2D API. Demo content is hardcoded (this is a visual preview); in the
-// real mod the rows bind to config_t / m_KeyBinds exactly like ArcticTech.
+// Menu — legacy HvH menu (icon tab-rail + sub-tab strip + dense sections),
+// drawn through the CRender-style Render2D API. Demo content is hardcoded.
 class Menu {
 public:
-    int   activeTab    = 0;     // which top tab is selected
-    float underlineT   = 0.f;   // 0..1 glide of the active-underline between tabs
-    bool  comboOpen    = false; // show an expanded dropdown (interaction demo)
+    int   activeTab  = 0;   // vertical rail selection
+    int   subTab     = 0;   // horizontal sub-tab selection
+    float subUlineT  = 1.f; // 0..1 glide of the sub-tab underline
+    bool  comboOpen  = false;
 
-    // openT: 0 = fully closed, 1 = fully open (drives slide + fade-in).
+    // openT: 0 closed, 1 open (drives fade + slide-in).
     void Draw(Render2D& r, float openT);
 
 private:
-    float gAlpha = 1.f; // global opacity (for the open fade)
-    float oy     = 0.f; // global y offset (for the open slide)
-
-    // alpha-aware color + offset-aware coordinate helpers
+    float gAlpha = 1.f;
+    float oy = 0.f;
     Color C(Color c) const { return c.withAf(gAlpha); }
     float Y(float y) const { return y + oy; }
 
+    void cap(Render2D& r, float x, float y, float w);
     void header(Render2D& r, float x, float y, float w);
-    void tabbar(Render2D& r, float x, float y, float w);
+    void topTabs(Render2D& r, float x, float y, float w);
+    void subtabs(Render2D& r, float x, float y, float w);
+    void icon(Render2D& r, int tab, float cx, float cy, Color c);
 
-    // widget rows; each returns the y for the next row
-    float groupboxTop(Render2D& r, float x, float y, float w, float h, const std::string& title);
-    float rowToggle(Render2D& r, float x, float y, float w, const std::string& label, bool on);
+    // sections + dense rows; each row returns next y
+    float section(Render2D& r, float x, float y, float w, float h, const std::string& title);
+    float rowCheck(Render2D& r, float x, float y, float w, const std::string& label,
+                   bool on, const std::string& bind = "");
     float rowSlider(Render2D& r, float x, float y, float w, const std::string& label,
-                    float t, const std::string& valueText, bool dragging = false);
+                    float t, const std::string& valueText);
     float rowCombo(Render2D& r, float x, float y, float w, const std::string& label,
                    const std::string& value);
-    float rowKeybind(Render2D& r, float x, float y, float w, const std::string& label,
-                     const std::string& key, const std::string& mode);
     float rowColor(Render2D& r, float x, float y, float w, const std::string& label, Color c);
 };

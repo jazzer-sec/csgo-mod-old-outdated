@@ -1,24 +1,26 @@
 #pragma once
 #include "Render2D.h"
 
-// Theme — one accent color drives the palette. Default is my call (the user
-// granted creative freedom): a violet accent on a near-black panel stack, which
-// reads well over the bright in-game backdrop. All of this would be exposed in
-// the Visuals/Theme tab in the real build.
+// Theme — legacy HvH palette: near-black warm-tinted panels, sharp 1px frames,
+// a single punchy GOLD accent (gamesense/aimware lineage, distinct from the old
+// cold "modern" violet). One accent drives the whole UI; exposed for retuning.
 struct Theme {
-    Color accent     {139, 124, 255};   // violet
-    Color accent2    {92,  225, 230};   // cyan (gradient partner)
-    Color bg         {13,  13,  18};
-    Color panel      {21,  21,  28, 245};
-    Color panel2     {28,  28,  38};
-    Color groupbox   {18,  18,  25};
-    Color text       {228, 230, 238};
-    Color textDim    {120, 124, 142};
-    Color outline    {44,  44,  58};
-    Color good       {86,  214, 122};
-    Color bad        {233, 84,  92};
-    Color warn       {240, 191, 78};
-    Color shadow     {0,   0,   0, 160};
+    Color accent     {245, 208, 54};    // gamesense yellow
+    Color accent2    {255, 226, 120};   // light yellow (highlight)
+    Color bg         {11,  11,  13};
+    Color panel      {22,  22,  25, 250};
+    Color panel2     {32,  32,  36};
+    Color rail       {17,  17,  19};
+    Color section    {26,  26,  29};
+    Color text       {214, 216, 220};
+    Color textDim    {122, 124, 132};
+    Color textFaint  {84,  86,  94};
+    Color outline    {40,  40,  46};
+    Color outlineLt  {56,  56,  64};
+    Color good       {126, 204, 116};
+    Color bad        {221, 84,  80};
+    Color warn       {245, 208, 54};
+    Color shadow     {0,   0,   0, 175};
 };
 
 inline const Theme& theme() {

@@ -199,11 +199,9 @@ public:
             }
     }
 
-    // ---- Text (embedded 8x8 bitmap font, integer scaled) ----
-    int TextWidth(const std::string& s, int scale = 1) const {
-        return (int)s.size() * 6 * scale; // 5px glyph + 1px gap, ×scale
-    }
-    int TextHeight(int scale = 1) const { return 7 * scale; }
+    // ---- Text (embedded proportional 5x7 pixel font, integer scaled) ----
+    int TextWidth(const std::string& s, int scale = 1) const;
+    int TextHeight(int scale = 1) const;
 
     void Text(float x, float y, const std::string& s, Color c, int scale = 1);
     void TextCentered(float cx, float y, const std::string& s, Color c, int scale = 1) {
