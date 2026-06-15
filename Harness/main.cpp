@@ -34,33 +34,33 @@ int main() {
         r.savePNG("Harness/out/01_scene.png");
     }
 
-    // 2) menu open, settled (RAGE tab)
+    // 2) menu open, settled (rage tab)
     {
         Render2D r(W, H);
         scene(r);
         dim(r, 1.f);
-        Menu m; m.activeTab = 0; m.subTab = 0; m.subUlineT = 1.f;
+        Menu m; m.activeTab = 0;
         m.Draw(r, 1.f);
         r.savePNG("Harness/out/02_menu.png");
     }
 
-    // 3) interaction: Target dropdown expanded
+    // 3) interaction: target dropdown expanded
     {
         Render2D r(W, H);
         scene(r);
         dim(r, 1.f);
-        Menu m; m.activeTab = 0; m.subTab = 0; m.subUlineT = 1.f; m.comboOpen = true;
+        Menu m; m.activeTab = 0; m.comboOpen = true;
         m.Draw(r, 1.f);
         r.savePNG("Harness/out/03_menu_interact.png");
     }
 
-    // 4) mid-open animation keyframe (fade + slide), sub-tab underline gliding
+    // 4) mid-open animation keyframe (fade + slide)
     {
         Render2D r(W, H);
         scene(r);
         dim(r, 0.55f);
-        Menu m; m.activeTab = 0; m.subTab = 1; m.subUlineT = 0.45f;
-        m.Draw(r, 0.6f);
+        Menu m; m.activeTab = 1;
+        m.Draw(r, 0.55f);
         r.savePNG("Harness/out/04_menu_opening.png");
     }
 

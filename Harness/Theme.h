@@ -1,26 +1,32 @@
 #pragma once
 #include "Render2D.h"
 
-// Theme — legacy HvH palette: near-black warm-tinted panels, sharp 1px frames,
-// a single punchy GOLD accent (gamesense/aimware lineage, distinct from the old
-// cold "modern" violet). One accent drives the whole UI; exposed for retuning.
+// Theme — premium legacy-HvH palette. Warm charcoal, cream text, a single
+// restrained TEAL accent (not the bright gamesense yellow, not modern violet).
+// Quiet, expensive-feeling; accent used sparingly.
 struct Theme {
-    Color accent     {245, 208, 54};    // gamesense yellow
-    Color accent2    {255, 226, 120};   // light yellow (highlight)
+    Color accent     {86,  190, 170};   // muted teal
+    Color accent2    {150, 220, 205};   // light teal (highlight)
+    Color accentDim  {60,  120, 110};   // teal, recessed
+
     Color bg         {11,  11,  13};
-    Color panel      {22,  22,  25, 250};
-    Color panel2     {32,  32,  36};
-    Color rail       {17,  17,  19};
-    Color section    {26,  26,  29};
-    Color text       {214, 216, 220};
-    Color textDim    {122, 124, 132};
-    Color textFaint  {84,  86,  94};
-    Color outline    {40,  40,  46};
-    Color outlineLt  {56,  56,  64};
-    Color good       {126, 204, 116};
-    Color bad        {221, 84,  80};
-    Color warn       {245, 208, 54};
-    Color shadow     {0,   0,   0, 175};
+    Color panel      {24,  25,  29, 252};
+    Color sideTop    {26,  27,  31};
+    Color sideBot    {18,  19,  22};
+    Color content    {28,  29,  33};
+    Color container  {33,  34,  39};
+    Color container2 {30,  31,  36};     // gradient partner (lower)
+    Color field      {20,  21,  24};
+
+    Color text       {223, 221, 213};    // warm cream
+    Color textDim    {132, 132, 136};
+    Color textFaint  {84,  85,  92};
+
+    Color line       {40,  41,  47};
+    Color lineSoft   {34,  35,  40};
+    Color good       {130, 200, 130};
+    Color bad        {214, 110, 96};     // muted terracotta (miss)
+    Color shadow     {0,   0,   0, 180};
 };
 
 inline const Theme& theme() {

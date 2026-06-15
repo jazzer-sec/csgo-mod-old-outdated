@@ -207,6 +207,18 @@ public:
     void TextCentered(float cx, float y, const std::string& s, Color c, int scale = 1) {
         Text(cx - TextWidth(s, scale) * 0.5f, y, s, c, scale);
     }
+    // (cx,cy) = exact center of the text box (horizontal + vertical centering)
+    void TextMid(float cx, float cy, const std::string& s, Color c, int scale = 1) {
+        Text(cx - TextWidth(s, scale) * 0.5f, cy - TextHeight(scale) * 0.5f, s, c, scale);
+    }
+    // left edge x, vertically centered on cy
+    void TextLMid(float x, float cy, const std::string& s, Color c, int scale = 1) {
+        Text(x, cy - TextHeight(scale) * 0.5f, s, c, scale);
+    }
+    // right edge xr, vertically centered on cy
+    void TextRMid(float xr, float cy, const std::string& s, Color c, int scale = 1) {
+        Text(xr - TextWidth(s, scale), cy - TextHeight(scale) * 0.5f, s, c, scale);
+    }
 
     bool savePNG(const std::string& path) const;
 

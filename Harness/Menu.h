@@ -2,16 +2,15 @@
 #include "Render2D.h"
 #include <string>
 
-// Menu — legacy HvH menu (icon tab-rail + sub-tab strip + dense sections),
-// drawn through the CRender-style Render2D API. Demo content is hardcoded.
+// Menu — premium legacy-HvH menu: left sidebar (logo + vertical nav), content
+// pane on the right. Restrained teal accent, cream text, soft depth. Drawn
+// through the CRender-style Render2D API; demo content hardcoded.
 class Menu {
 public:
-    int   activeTab  = 0;   // vertical rail selection
-    int   subTab     = 0;   // horizontal sub-tab selection
-    float subUlineT  = 1.f; // 0..1 glide of the sub-tab underline
-    bool  comboOpen  = false;
+    int  activeTab = 0;
+    bool comboOpen = false;
 
-    // openT: 0 closed, 1 open (drives fade + slide-in).
+    // openT: 0 closed, 1 open (fade + slide-in).
     void Draw(Render2D& r, float openT);
 
 private:
@@ -20,14 +19,11 @@ private:
     Color C(Color c) const { return c.withAf(gAlpha); }
     float Y(float y) const { return y + oy; }
 
-    void cap(Render2D& r, float x, float y, float w);
-    void header(Render2D& r, float x, float y, float w);
-    void topTabs(Render2D& r, float x, float y, float w);
-    void subtabs(Render2D& r, float x, float y, float w);
+    void sidebar(Render2D& r, float x, float y, float w, float h);
     void icon(Render2D& r, int tab, float cx, float cy, Color c);
+    void contentHead(Render2D& r, float x, float y, float w, const std::string& title);
 
-    // sections + dense rows; each row returns next y
-    float section(Render2D& r, float x, float y, float w, float h, const std::string& title);
+    float container(Render2D& r, float x, float y, float w, float h, const std::string& title);
     float rowCheck(Render2D& r, float x, float y, float w, const std::string& label,
                    bool on, const std::string& bind = "");
     float rowSlider(Render2D& r, float x, float y, float w, const std::string& label,
