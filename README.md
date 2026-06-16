@@ -53,3 +53,14 @@ g++ -std=c++17 src/demo.cpp -o /tmp/modtest && /tmp/modtest
 Software-rendered preview of the menu + HUD (see `Harness/README.md`). It binds
 the menu rows and HUD windows directly to `src/Config.h`, so the preview shows
 the same state the features read.
+
+### Standalone interactive app (`App/`)
+A windowed build (SDL2) with the menu, HUD, and the real `create_move` pipeline
+compiled in, running against a **simulated** HvH scene — no game, no injection.
+`INSERT` toggles the menu, left-click drives it, and the feature logic reacts to
+what you change. See `App/README.md`. The interaction logic is verified headless:
+
+```sh
+g++ -std=c++17 -O2 App/headless_test.cpp Harness/Render2D.cpp Harness/Hud.cpp \
+    Harness/Menu.cpp $(pkg-config --cflags --libs freetype2) -o /tmp/apptest && /tmp/apptest
+```

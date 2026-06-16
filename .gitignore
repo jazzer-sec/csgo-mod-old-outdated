@@ -1,0 +1,6 @@
+# generated previews / build output
+**/out/
+*.exe
+*.o
+jazzhook_app
+jazzhook_demo
