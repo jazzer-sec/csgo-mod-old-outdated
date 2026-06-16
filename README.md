@@ -28,14 +28,22 @@ The actual cheat sections, organized by menu area, over self-contained SDK
 stubs. `src/Config.h` (`cfg::g_cfg`) is the single source of truth shared by the
 features and the menu, so a menu row and the code it drives never drift.
 
-- `src/SDK/` — math + engine stand-ins (player/weapon/usercmd/globals).
+Each section is ported toward how the ArcticTech fork structures it (multipoint +
+autowall ragebot, animation-bounded desync, counter-strafe movement), but kept
+standalone and testable: no game, no DX9, just the SDK stubs.
+
+- `src/SDK/` — math + engine stand-ins (player/weapon/usercmd/globals) and
+  `Hitbox.h` (hitbox skeleton, hit-group damage model, spread-sampled hitchance).
 - `src/Config.h` — per-section config structs + combo label tables.
-- `src/Features/Ragebot.h` — target selection + damage/hitchance gating.
-- `src/Features/AntiAim.h` — fake/real angles, manual, jitter, desync, fake-duck.
-- `src/Features/Movement.h` — bunny hop, auto-strafe, fast-stop.
+- `src/Features/Ragebot.h` — multipoint scan over hitboxes, `get_damage`/hitchance
+  per point, safe-point preference, then target priority + fire gating.
+- `src/Features/AntiAim.h` — real/fake angle split: pitch, base direction,
+  freestanding (face away from the threat), jitter, movement-bounded desync delta.
+- `src/Features/Movement.h` — bunny hop, air-strafe optimizer, counter-strafe fast-stop.
 - `src/Features/Esp.h` — per-enemy ESP entries (data for the HUD).
-- `src/Features/FeatureManager.h` — the create-move pipeline tying it together.
-- `src/demo.cpp` — self-test exercising every section.
+- `src/Features/FeatureManager.h` — the create-move pipeline tying it together
+  (ragebot snaps the command on fire; anti-aim runs otherwise).
+- `src/demo.cpp` — self-test exercising every section (18 checks).
 
 ```sh
 g++ -std=c++17 src/demo.cpp -o /tmp/modtest && /tmp/modtest

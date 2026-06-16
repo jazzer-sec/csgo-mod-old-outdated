@@ -24,6 +24,9 @@ struct Weapon {
     int   def_index = WEAP_AK;
     int   base_damage = 36;
     float range = 8192.f;
+    float range_modifier = 0.98f;  // per-CS:GO damage falloff base
+    float inaccuracy = 0.012f;     // base cone (radians) for hitchance sims
+    int   penetration = 1;         // wall-bang power (autowall model)
     float next_primary_attack = 0.f; // curtime gate
     bool  is_sniper = false;
 };
@@ -45,10 +48,13 @@ struct Player {
     int    team = 3;
     int    health = 100;
     int    armor = 100;
+    bool   has_helmet = true;
     Vec3   origin, eye, velocity;
     bool   on_ground = true;
+    bool   ducking = false;
     bool   scoped = false;
     bool   defusing = false;
+    float  lower_body_yaw = 0.f;   // LBY / animation yaw (desync reference)
     std::string name;
     Weapon* weapon = nullptr;
 };
