@@ -1,6 +1,7 @@
 #include "Menu.h"
 #include "Theme.h"
 #include "Anim.h"
+#include "../src/Config.h"
 #include <string>
 
 static const char* kTabs[] = {"rage", "anti-aim", "visuals", "misc", "configs"};
@@ -153,95 +154,99 @@ void Menu::contentHead(Render2D& r, float x, float y, float w, const std::string
 void Menu::pageRage(Render2D& r, float lx, float rx, float colW, float by0)
 {
     const Theme& t = theme();
+    auto& c = cfg::g_cfg.rage;
     float lcy = container(r, lx, by0, colW, 134, "aimbot");
-    lcy = rowCheck (r, lx, lcy, colW, "enabled", true);
-    lcy = rowSlider(r, lx, lcy, colW, "minimum damage", 0.35f, "35");
+    lcy = rowCheck (r, lx, lcy, colW, "enabled", c.enabled);
+    lcy = rowSlider(r, lx, lcy, colW, "minimum damage", c.min_damage / 100.f, std::to_string(c.min_damage));
     comboAY = lcy;
-    lcy = rowCombo (r, lx, lcy, colW, "target", "nearest");
-    lcy = rowCheck (r, lx, lcy, colW, "auto fire", true, "mouse5");
+    lcy = rowCombo (r, lx, lcy, colW, "target", cfg::kTarget[c.target]);
+    lcy = rowCheck (r, lx, lcy, colW, "auto fire", c.auto_fire, "mouse5");
 
     lcy = container(r, lx, by0 + 144, colW, 92, "accuracy");
-    lcy = rowCheck (r, lx, lcy, colW, "auto stop", true);
-    lcy = rowCheck (r, lx, lcy, colW, "auto scope", true);
+    lcy = rowCheck (r, lx, lcy, colW, "auto stop", c.auto_stop);
+    lcy = rowCheck (r, lx, lcy, colW, "auto scope", c.auto_scope);
 
     float rcy = container(r, rx, by0, colW, 134, "exploits");
-    rcy = rowCheck (r, rx, rcy, colW, "double tap", true, "x");
-    rcy = rowCheck (r, rx, rcy, colW, "hide shots", true, "c");
-    rcy = rowSlider(r, rx, rcy, colW, "shift amount", 0.85f, "14t");
+    rcy = rowCheck (r, rx, rcy, colW, "double tap", c.double_tap, "x");
+    rcy = rowCheck (r, rx, rcy, colW, "hide shots", c.hide_shots, "c");
+    rcy = rowSlider(r, rx, rcy, colW, "shift amount", c.shift_amount / 16.f, std::to_string(c.shift_amount) + "t");
 
     rcy = container(r, rx, by0 + 144, colW, 92, "overrides");
-    rcy = rowSlider(r, rx, rcy, colW, "hitchance", 0.72f, "72%");
+    rcy = rowSlider(r, rx, rcy, colW, "hitchance", c.hitchance / 100.f, std::to_string(c.hitchance) + "%");
     rcy = rowColor (r, rx, rcy, colW, "accent", t.accent);
 }
 
 void Menu::pageAntiAim(Render2D& r, float lx, float rx, float colW, float by0)
 {
+    auto& a = cfg::g_cfg.aa;
     float lcy = container(r, lx, by0, colW, 120, "anti-aimbot");
-    lcy = rowCheck (r, lx, lcy, colW, "enabled", true);
-    lcy = rowCombo (r, lx, lcy, colW, "pitch", "down");
-    lcy = rowCombo (r, lx, lcy, colW, "yaw base", "backward");
-    lcy = rowCombo (r, lx, lcy, colW, "yaw jitter", "offset");
+    lcy = rowCheck (r, lx, lcy, colW, "enabled", a.enabled);
+    lcy = rowCombo (r, lx, lcy, colW, "pitch", cfg::kPitch[a.pitch]);
+    lcy = rowCombo (r, lx, lcy, colW, "yaw base", cfg::kYawBase[a.yaw_base]);
+    lcy = rowCombo (r, lx, lcy, colW, "yaw jitter", cfg::kYawJitter[a.yaw_jitter]);
 
     lcy = container(r, lx, by0 + 130, colW, 114, "desync");
-    lcy = rowSlider(r, lx, lcy, colW, "amount", 0.62f, "62");
-    lcy = rowCombo (r, lx, lcy, colW, "inverter", "switch");
-    lcy = rowSlider(r, lx, lcy, colW, "body lean", 0.40f, "40");
+    lcy = rowSlider(r, lx, lcy, colW, "amount", a.desync / 100.f, std::to_string(a.desync));
+    lcy = rowCombo (r, lx, lcy, colW, "inverter", cfg::kInverter[a.inverter]);
+    lcy = rowSlider(r, lx, lcy, colW, "body lean", a.body_lean / 100.f, std::to_string(a.body_lean));
 
     float rcy = container(r, rx, by0, colW, 100, "on shot");
-    rcy = rowCheck (r, rx, rcy, colW, "fake duck", true, "f");
-    rcy = rowCheck (r, rx, rcy, colW, "defensive aa", false);
-    rcy = rowCombo (r, rx, rcy, colW, "hide shots", "on key");
+    rcy = rowCheck (r, rx, rcy, colW, "fake duck", a.fake_duck, "f");
+    rcy = rowCheck (r, rx, rcy, colW, "defensive aa", a.defensive);
+    rcy = rowCombo (r, rx, rcy, colW, "hide shots", cfg::kHideShots[a.hide_shots]);
 
     rcy = container(r, rx, by0 + 110, colW, 134, "manual");
-    rcy = rowCheck (r, rx, rcy, colW, "left", true, "left");
-    rcy = rowCheck (r, rx, rcy, colW, "right", true, "right");
-    rcy = rowCheck (r, rx, rcy, colW, "backward", true, "down");
-    rcy = rowCheck (r, rx, rcy, colW, "freestand", false, "alt");
+    rcy = rowCheck (r, rx, rcy, colW, "left", a.manual_left, "left");
+    rcy = rowCheck (r, rx, rcy, colW, "right", a.manual_right, "right");
+    rcy = rowCheck (r, rx, rcy, colW, "backward", a.manual_back, "down");
+    rcy = rowCheck (r, rx, rcy, colW, "freestand", a.freestand, "alt");
 }
 
 void Menu::pageVisuals(Render2D& r, float lx, float rx, float colW, float by0)
 {
     const Theme& t = theme();
+    auto& v = cfg::g_cfg.visuals;
     float lcy = container(r, lx, by0, colW, 134, "players");
-    lcy = rowCheck (r, lx, lcy, colW, "enabled", true);
-    lcy = rowCombo (r, lx, lcy, colW, "boxes", "cornered");
-    lcy = rowCheck (r, lx, lcy, colW, "skeleton", true);
-    lcy = rowCheck (r, lx, lcy, colW, "health bar", true);
+    lcy = rowCheck (r, lx, lcy, colW, "enabled", v.players);
+    lcy = rowCombo (r, lx, lcy, colW, "boxes", cfg::kBoxes[v.boxes]);
+    lcy = rowCheck (r, lx, lcy, colW, "skeleton", v.skeleton);
+    lcy = rowCheck (r, lx, lcy, colW, "health bar", v.health);
 
     lcy = container(r, lx, by0 + 144, colW, 92, "effects");
-    lcy = rowCombo (r, lx, lcy, colW, "chams", "flat");
-    lcy = rowCheck (r, lx, lcy, colW, "hit marker", true);
+    lcy = rowCombo (r, lx, lcy, colW, "chams", cfg::kChams[v.chams]);
+    lcy = rowCheck (r, lx, lcy, colW, "hit marker", v.hit_marker);
 
     float rcy = container(r, rx, by0, colW, 92, "world");
-    rcy = rowCheck (r, rx, rcy, colW, "remove scope", true);
+    rcy = rowCheck (r, rx, rcy, colW, "remove scope", v.remove_scope);
     rcy = rowColor (r, rx, rcy, colW, "esp color", t.accent);
 
     rcy = container(r, rx, by0 + 102, colW, 134, "interface");
-    rcy = rowCheck (r, rx, rcy, colW, "watermark", true);
-    rcy = rowCheck (r, rx, rcy, colW, "keybinds", true);
-    rcy = rowCheck (r, rx, rcy, colW, "spectators", true);
-    rcy = rowCheck (r, rx, rcy, colW, "hit log", true);
+    rcy = rowCheck (r, rx, rcy, colW, "watermark", v.watermark);
+    rcy = rowCheck (r, rx, rcy, colW, "keybinds", v.keybinds);
+    rcy = rowCheck (r, rx, rcy, colW, "spectators", v.spectators);
+    rcy = rowCheck (r, rx, rcy, colW, "hit log", v.hit_log);
 }
 
 void Menu::pageMisc(Render2D& r, float lx, float rx, float colW, float by0)
 {
+    auto& m = cfg::g_cfg.misc;
     float lcy = container(r, lx, by0, colW, 114, "movement");
-    lcy = rowCheck (r, lx, lcy, colW, "bunny hop", true);
-    lcy = rowCheck (r, lx, lcy, colW, "auto strafe", true);
-    lcy = rowCheck (r, lx, lcy, colW, "fast stop", true);
+    lcy = rowCheck (r, lx, lcy, colW, "bunny hop", m.bhop);
+    lcy = rowCheck (r, lx, lcy, colW, "auto strafe", m.auto_strafe);
+    lcy = rowCheck (r, lx, lcy, colW, "fast stop", m.fast_stop);
 
     lcy = container(r, lx, by0 + 124, colW, 92, "automation");
-    lcy = rowCheck (r, lx, lcy, colW, "auto accept", true);
-    lcy = rowCheck (r, lx, lcy, colW, "auto pistol", true);
+    lcy = rowCheck (r, lx, lcy, colW, "auto accept", m.auto_accept);
+    lcy = rowCheck (r, lx, lcy, colW, "auto pistol", m.auto_pistol);
 
     float rcy = container(r, rx, by0, colW, 114, "misc");
-    rcy = rowCheck (r, rx, rcy, colW, "anti aim-block", true);
-    rcy = rowCheck (r, rx, rcy, colW, "fake lag", true, "shift");
-    rcy = rowSlider(r, rx, rcy, colW, "fps boost", 0.50f, "med");
+    rcy = rowCheck (r, rx, rcy, colW, "anti aim-block", m.anti_aimblock);
+    rcy = rowCheck (r, rx, rcy, colW, "fake lag", m.fake_lag, "shift");
+    rcy = rowSlider(r, rx, rcy, colW, "fps boost", m.fps_boost / 3.f, cfg::kFps[m.fps_boost]);
 
     rcy = container(r, rx, by0 + 124, colW, 92, "camera");
-    rcy = rowCheck (r, rx, rcy, colW, "third person", false, "n");
-    rcy = rowCheck (r, rx, rcy, colW, "free cam", false, "m");
+    rcy = rowCheck (r, rx, rcy, colW, "third person", m.third_person, "n");
+    rcy = rowCheck (r, rx, rcy, colW, "free cam", m.free_cam, "m");
 }
 
 void Menu::pageConfigs(Render2D& r, float lx, float rx, float colW, float by0)

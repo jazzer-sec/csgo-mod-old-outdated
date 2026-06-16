@@ -1,5 +1,6 @@
 #include "Hud.h"
 #include "Theme.h"
+#include "../src/Config.h"
 #include <string>
 #include <vector>
 #include <cmath>
@@ -72,9 +73,9 @@ struct Seg { std::string s; Color c; };
 void drawSegsPill(Render2D& r, float cx, float cy, const std::vector<Seg>& segs, float alpha) {
     float total = 0;
     for (auto& sg : segs) total += r.TextWidth(sg.s, 1);
-    float pw = total + 22, ph = 17;
-    r.RoundedBox(cx - pw / 2, cy - ph / 2, pw, ph, 4, t().panel.withAf(0.55f * alpha));
-    r.RoundedBoxOutline(cx - pw / 2, cy - ph / 2, pw, ph, 4, 1.f, t().line.withAf(alpha));
+    float pw = total + 20, ph = 18;
+    r.RoundedBox(cx - pw / 2, cy - ph / 2, pw, ph, 4, Color(9, 9, 11).withAf(0.82f * alpha));
+    r.RoundedBoxOutline(cx - pw / 2, cy - ph / 2, pw, ph, 4, 1.f, Color(255, 255, 255, 16).withAf(alpha));
     float px = cx - total / 2;
     for (auto& sg : segs) {
         r.TextLMid(px, cy, sg.s, sg.c.withAf(alpha), 1);
@@ -145,7 +146,7 @@ void Hud::DrawOverlays(Render2D& r) {
     int W = r.width(), H = r.height();
 
     // ---------- watermark (top-right) ----------
-    {
+    if (cfg::g_cfg.visuals.watermark) {
         std::vector<std::string> parts = {"jazzhook", "skippy", "64 tick", "120 fps", "13 ms", "09:33:35"};
         float gap = 12;
         float tw = 0;
@@ -162,11 +163,14 @@ void Hud::DrawOverlays(Render2D& r) {
     }
 
     // ---------- keybind list (right) ----------
-    {
+    if (cfg::g_cfg.visuals.keybinds) {
+        const auto& rc = cfg::g_cfg.rage; const auto& ac = cfg::g_cfg.aa;
         struct KB { std::string name, mode; };
         std::vector<KB> binds = {
-            {"double tap", "on"}, {"hide shots", "holding"}, {"baim", "holding"},
-            {"fake duck", "on"}, {"damage override", "off"}
+            {"double tap", rc.double_tap ? "on" : "off"},
+            {"hide shots", rc.hide_shots ? "holding" : "off"},
+            {"fake duck", ac.fake_duck ? "on" : "off"},
+            {"manual back", ac.manual_back ? "holding" : "off"},
         };
         float w = 152, rowH = 17, x = W - w - 16, y = 50;
         float h = 24 + binds.size() * rowH + 6;
@@ -183,7 +187,7 @@ void Hud::DrawOverlays(Render2D& r) {
     }
 
     // ---------- spectator list (right) ----------
-    {
+    if (cfg::g_cfg.visuals.spectators) {
         struct SP { std::string name, mode; };
         std::vector<SP> specs = { {"cancer_kid", "1st"}, {"silent", "free"} };
         float w = 152, rowH = 17, x = W - w - 16, y = 186;
@@ -204,7 +208,11 @@ void Hud::DrawOverlays(Render2D& r) {
     {
         struct Ind { std::string label; bool on; };
         std::vector<Ind> inds = {
-            {"dt", true}, {"hide", true}, {"baim", false}, {"fake", true}, {"safe", true}
+            {"dt", cfg::g_cfg.rage.double_tap},
+            {"hide", cfg::g_cfg.rage.hide_shots},
+            {"baim", cfg::g_cfg.aa.manual_back},
+            {"fake", cfg::g_cfg.aa.fake_duck},
+            {"safe", cfg::g_cfg.rage.auto_stop},
         };
         float gap = 7;
         std::vector<float> ws; float total = 0;
@@ -225,17 +233,41 @@ void Hud::DrawOverlays(Render2D& r) {
         }
     }
 
-    // ---------- hit / miss log (centered, above indicators) ----------
-    {
-        std::vector<std::vector<Seg>> log = {
-            { {"hit", t().accent}, {"  trash_kid   ", t().text}, {"87", t().accent}, {"  head", t().textDim} },
-            { {"hit", t().accent}, {"  noscoper   ", t().text}, {"134", t().accent}, {"  chest", t().textDim} },
-            { {"miss", t().bad}, {"  trash_kid   ", t().text}, {"resolved", t().textDim} },
+    // ---------- hit log (centered, above indicators) ----------
+    // Detailed gamesense-style line, modeled on the user's reference shot:
+    //   jazzhook  Hit <victim> in the <hitbox> for <dmg> damage (<hp> health left) (hc: <x>% -> bt: <y>t)
+    if (cfg::g_cfg.visuals.hit_log) {
+        auto hit = [&](const std::string& victim, const std::string& hitbox,
+                       int dmg, int hp, int hc, int bt) {
+            std::vector<Seg> s;
+            Color cream = t().text, dim = t().textDim, acc = t().accent;
+            s.push_back({"jazzhook", acc});
+            s.push_back({"  Hit ", cream});
+            s.push_back({victim, acc});
+            s.push_back({" in the ", cream});
+            s.push_back({hitbox, acc});
+            s.push_back({" for ", cream});
+            s.push_back({std::to_string(dmg), acc});
+            s.push_back({" damage ", cream});
+            s.push_back({"(", dim});
+            s.push_back({std::to_string(hp), hp == 0 ? t().bad : cream});
+            s.push_back({" health left) ", dim});
+            s.push_back({"(hc: ", dim});
+            s.push_back({std::to_string(hc) + "%", acc});
+            s.push_back({" → bt: ", dim});
+            s.push_back({std::to_string(bt) + "t", acc});
+            s.push_back({")", dim});
+            return s;
         };
-        float baseY = indY - 26; // first (freshest) line sits just above indicators
-        float fades[] = {1.0f, 0.7f, 0.45f};
+        std::vector<std::vector<Seg>> log = {
+            hit("дамский угодник", "head", 289, 0, 98, 12),
+            hit("trash_kid", "chest", 134, 27, 76, 8),
+            hit("noscoper", "stomach", 41, 63, 64, 4),
+        };
+        float baseY = indY - 28; // freshest line sits just above the indicators
+        float fades[] = {1.0f, 0.66f, 0.4f};
         for (size_t i = 0; i < log.size(); ++i)
-            drawSegsPill(r, W / 2.f, baseY - i * 20, log[i], fades[i]);
+            drawSegsPill(r, W / 2.f, baseY - i * 21, log[i], fades[i]);
     }
 
     // ---------- toast (bottom-right) ----------

@@ -29,6 +29,27 @@ FontFace& font() { static FontFace f; return f; }
 // 1 = body (Verdana-11-ish), 2 = heading, 3 = wordmark.
 int pxForScale(int scale) { return scale <= 1 ? 11 : (scale == 2 ? 16 : 22); }
 
+// Decode a UTF-8 string into Unicode codepoints so we can render non-ASCII
+// (arrows, Cyrillic, etc.) through FreeType's Unicode charmap.
+std::vector<uint32_t> utf8_decode(const std::string& s) {
+    std::vector<uint32_t> out;
+    size_t i = 0, n = s.size();
+    while (i < n) {
+        unsigned char c = (unsigned char)s[i];
+        uint32_t cp; int extra;
+        if (c < 0x80)            { cp = c;        extra = 0; }
+        else if ((c >> 5) == 0x6){ cp = c & 0x1F; extra = 1; }
+        else if ((c >> 4) == 0xE){ cp = c & 0x0F; extra = 2; }
+        else if ((c >> 3) == 0x1E){cp = c & 0x07; extra = 3; }
+        else                     { cp = 0xFFFD;   extra = 0; }
+        ++i;
+        for (int k = 0; k < extra && i < n; ++k, ++i)
+            cp = (cp << 6) | ((unsigned char)s[i] & 0x3F);
+        out.push_back(cp);
+    }
+    return out;
+}
+
 } // namespace
 
 // Legacy proportional 5x7 pixel font kept for reference / fallback only.
@@ -137,8 +158,8 @@ int Render2D::TextWidth(const std::string& s, int scale) const {
     if (!f.ok) return 0;
     FT_Set_Pixel_Sizes(f.face, 0, pxForScale(scale));
     long w = 0;
-    for (char ch : s) {
-        if (FT_Load_Char(f.face, (unsigned char)ch, FT_LOAD_DEFAULT)) continue;
+    for (uint32_t cp : utf8_decode(s)) {
+        if (FT_Load_Char(f.face, cp, FT_LOAD_DEFAULT)) continue;
         w += f.face->glyph->advance.x >> 6;
     }
     return (int)w;
@@ -155,8 +176,8 @@ void Render2D::Text(float x, float y, const std::string& s, Color c, int scale)
     int ascent = f.face->size->metrics.ascender >> 6;
     float pen = x;
     float baseline = y + ascent - 1; // ~top-aligned to y
-    for (char ch : s) {
-        if (FT_Load_Char(f.face, (unsigned char)ch, FT_LOAD_RENDER)) continue;
+    for (uint32_t cp : utf8_decode(s)) {
+        if (FT_Load_Char(f.face, cp, FT_LOAD_RENDER)) continue;
         FT_GlyphSlot g = f.face->glyph;
         const FT_Bitmap& bm = g->bitmap;
         int gx = (int)std::lround(pen) + g->bitmap_left;
