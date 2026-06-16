@@ -15,7 +15,7 @@
 //   6. tagline animates out
 // Cosmetic only (no hooks). Drawn through Render2D so every backend matches.
 struct Splash {
-    static constexpr float DUR = 5.0f;
+    static constexpr float DUR = 5.8f;
     float t = -1.f;                 // < 0 = inactive
 
     void start() { t = 0.f; }
@@ -75,12 +75,11 @@ struct Splash {
         const float shot  = seg(t, 1.45f, 2.35f);                  // ball travel (linear-ish)
         const float make  = seg(t, 2.30f, 2.75f);                  // swish burst
         const float s1out = ease_out_cubic(seg(t, 2.55f, 3.1f));
-        const float tagIn = seg(t, 3.0f, 3.85f);
-        const float tagOut= ease_out_cubic(seg(t, 4.35f, 4.95f));
+        const float tagOut= ease_out_cubic(seg(t, 5.05f, 5.7f));   // scene-2 exit
 
         // dark scrim + smooth radial glow
         r.BoxFilled(0, 0, W, H, Color(8, 9, 11).withAf(0.96f * A));
-        r.GlowCircle(cx, cy - 4, 280, th.accent.withA(28).withAf(A * (1.f - tagIn)));
+        r.GlowCircle(cx, cy - 4, 280, th.accent.withA(28).withAf(A * (1.f - s1out)));
 
         // ===================== scene 1 =====================
         const float s1A = A * (1.f - s1out);
@@ -163,46 +162,56 @@ struct Splash {
                 th.textFaint.withAf(s1A), 1);
         }
 
-        // ===================== scene 2: tagline blooms from center outward =========
+        // ===================== scene 2: comedic setup -> punchline ==================
+        // Understated setup slides in, then the punchline "Knicks" slams in big,
+        // then the cheeky "?" bounces in last. Deadpan timing = the joke.
         const float tagA = A * (1.f - tagOut);
-        if (tagIn > 0.f && tagA > 0.002f) {
-            const std::string tag = "how bout them knicks?";
-            const float ty = cy - 4;
-            const float ly = ty + 22;
-            const float openE = ease_out_cubic(tagIn);
+        const float setup = seg(t, 3.05f, 3.7f);    // "How 'bout them"
+        const float punch = seg(t, 3.7f, 4.15f);    // "Knicks" slam
+        const float qmark = seg(t, 4.15f, 4.55f);   // "?" bounce
+        if (setup > 0.f && tagA > 0.002f) {
+            const std::string A1 = "How 'bout them ";   // setup (scale 2, dim)
+            const std::string B1 = "Knicks";            // punchline (scale 4, accent)
+            const std::string C1 = "?";                 // the cheeky beat (scale 4)
+            const float h2 = (float)r.TextHeight(2), h4 = (float)r.TextHeight(4);
+            const float wA = (float)r.TextWidth(A1, 2);
+            const float wB = (float)r.TextWidth(B1, 4);
+            const float wC = (float)r.TextWidth(C1, 4);
+            const float total = wA + wB + wC;
+            const float x0 = cx - total * 0.5f;
+            const float midY = cy;
+            const float fade = 1.f - tagOut;
 
-            // soft bloom growing from the center, behind the text
-            float bloom = (40.f + 240.f * openE) * (1.f - tagOut);
-            r.GlowCircle(cx, ty, bloom, th.accent.withA(34).withAf(A * (1.f - tagOut)));
+            // setup: small, dim, slides in from the left and settles
+            float sE = ease_out_cubic(setup);
+            float sx = x0 - (1.f - sE) * 16.f;
+            r.Text(sx, midY - h2 * 0.5f, A1, th.textDim.withAf(tagA * sE), 2);
 
-            // beam expanding from the center to both sides, hot core + flying ends
-            float reach = (W * 0.34f) * openE * (1.f - tagOut);
-            r.RoundedBox(cx - reach, ly, reach * 2.f, 2.f, 1.f, th.accent.withAf(tagA));
-            r.GlowCircle(cx, ly + 1, 16 * (1.f - tagOut), th.text.withA(160).withAf(tagA));
-            r.GlowCircle(cx + reach, ly + 1, 13, th.accent2.withA(180).withAf(tagA));
-            r.GlowCircle(cx - reach, ly + 1, 13, th.accent2.withA(180).withAf(tagA));
-            // thin outward streaks above/below for extra flair
-            for (int s = -1; s <= 1; s += 2) {
-                float yy = ly + s * 7.f;
-                float rr = reach * 0.82f;
-                r.RoundedBox(cx - rr, yy, rr * 2.f, 1.f, 0.5f, th.accent.withA(70).withAf(tagA));
+            // punchline bloom + underline keyed to "Knicks?"
+            float bx = x0 + wA;                          // left of "Knicks"
+            float punchCx = bx + (wB + wC) * 0.5f;
+            float pE = ease_out_back(punch);
+            if (punch > 0.f) {
+                float flash = std::max(0.f, 1.f - seg(t, 3.7f, 4.05f) * 1.4f); // entry pop
+                r.GlowCircle(punchCx, midY, 120.f * fade,
+                             th.accent.withA(40).withAf(A * fade * (0.5f + 0.5f * pE)));
+                r.GlowCircle(punchCx, midY, 60.f,
+                             th.accent2.withA(150).withAf(A * fade * flash));
+                // punchline underline grows under "Knicks?"
+                float uw = (wB + wC + 10.f) * std::clamp(pE, 0.f, 1.f);
+                r.RoundedBox(punchCx - uw * 0.5f, midY + h4 * 0.5f + 4.f, uw, 2.f, 1.f,
+                             th.accent.withAf(tagA));
             }
 
-            // text revealed from the middle outward (letters near center first)
-            float totalW = (float)r.TextWidth(tag, 3);
-            float penX = cx - totalW * 0.5f;
-            float revealR = (totalW * 0.62f) * openE + 8.f; // expands past the ends
-            for (char ch : tag) {
-                std::string s(1, ch);
-                float cw = (float)r.TextWidth(s, 3);
-                float charCx = penX + cw * 0.5f;
-                float dist = std::fabs(charCx - cx);
-                float a = smoothstep01((revealR - dist) / 26.f) * tagA;
-                float rise = (1.f - a / (tagA + 1e-4f)) * 7.f;
-                if (a > 0.003f)
-                    r.Text(penX, ty - r.TextHeight(3) * 0.5f - rise, s, th.text.withAf(a), 3);
-                penX += cw;
-            }
+            // "Knicks": slams down from above with an overshoot
+            float pYoff = (1.f - pE) * -22.f;            // from above; back-ease overshoots
+            r.Text(bx, midY - h4 * 0.5f + pYoff, B1, th.accent.withAf(tagA * std::clamp(punch * 3.f, 0.f, 1.f)), 4);
+
+            // "?": bounces in last, a beat behind — the deadpan kicker
+            float qE = ease_out_back(qmark);
+            float qYoff = (1.f - qE) * -26.f;
+            r.Text(bx + wB, midY - h4 * 0.5f + qYoff, C1,
+                   th.accent.withAf(tagA * std::clamp(qmark * 3.f, 0.f, 1.f)), 4);
         }
     }
 };
