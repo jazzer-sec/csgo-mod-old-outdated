@@ -26,15 +26,16 @@ int main() {
         app_frame(r, st, mouse(0, 0, false, false), false, 0.3f);
     CHECK(st.open.cur > 0.999f, "menu animates fully open");
 
+    // widget coords for the centered menu (W=1280,H=720 => x=348,y=180)
     std::printf("[interaction]\n");
     bool wasEnabled = cfg::g_cfg.rage.enabled;
-    app_frame(r, st, mouse(412, 266, true, true), false, 0.016f);
+    app_frame(r, st, mouse(612, 278, true, true), false, 0.016f);
     CHECK(cfg::g_cfg.rage.enabled != wasEnabled, "clicking a checkbox toggles its cfg field");
 
-    app_frame(r, st, mouse(564, 300, true, false), false, 0.016f);
+    app_frame(r, st, mouse(700, 308, true, false), false, 0.016f);
     CHECK(cfg::g_cfg.rage.min_damage >= 95, "dragging a slider writes the value");
 
-    app_frame(r, st, mouse(290, 290, true, true), false, 0.016f);
+    app_frame(r, st, mouse(424, 303, true, true), false, 0.016f);
     CHECK(st.menu.activeTab == 1, "clicking a sidebar tab switches the page");
 
     // let the tab-highlight glide finish, then snapshot for a visual sanity check

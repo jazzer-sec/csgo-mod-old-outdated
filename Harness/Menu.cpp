@@ -16,7 +16,9 @@ void Menu::Draw(Render2D& r, float openT)
     oy = (1.f - e) * 14.f;
     live = openT >= 0.999f; // only react to the mouse once fully open
 
-    const float x = 214, y = 168, w = 584, h = 360, sideW = 152;
+    const float w = 584, h = 360, sideW = 152;
+    const float x = (r.width() - w) / 2.f;   // center the window on screen
+    const float y = (r.height() - h) / 2.f;
 
     r.Shadow(x, Y(y), w, h, 5, 26, C(t.shadow));
     r.RoundedBox(x, Y(y), w, h, 5, C(t.panel));

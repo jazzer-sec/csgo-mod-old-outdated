@@ -32,6 +32,9 @@ struct Color {
     }
 };
 
+#ifdef R2D_IMGUI
+#include "Render2DImgui.h"   // GPU backend: same API, draws via ImGui ImDrawList
+#else
 class Render2D {
 public:
     Render2D(int w, int h) : W(w), H(h), px((size_t)w * h * 4, 0) {}
@@ -257,3 +260,4 @@ private:
         return std::hypot(px_ - (ax + vx * t), py_ - (ay + vy * t));
     }
 };
+#endif // R2D_IMGUI
