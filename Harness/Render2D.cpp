@@ -17,9 +17,23 @@ struct FontFace {
     bool ok = false;
     FontFace() {
         if (FT_Init_FreeType(&lib)) return;
-        const char* path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
-        if (FT_New_Face(lib, path, 0, &face)) return;
-        ok = true;
+        // Probe common font locations: Linux (DejaVu), macOS (system fonts via Homebrew or built-in)
+        static const char* candidates[] = {
+            // Linux
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+            // macOS Homebrew font-dejavu
+            "/opt/homebrew/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/local/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            // macOS system (Helvetica — close enough for preview)
+            "/System/Library/Fonts/Helvetica.ttc",
+            "/System/Library/Fonts/HelveticaNeue.ttc",
+            // macOS Arial (widely present)
+            "/Library/Fonts/Arial.ttf",
+            "/System/Library/Fonts/Supplemental/Arial.ttf",
+        };
+        for (const char* path : candidates)
+            if (!FT_New_Face(lib, path, 0, &face)) { ok = true; return; }
     }
 };
 
