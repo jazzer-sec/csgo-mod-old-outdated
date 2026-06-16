@@ -39,6 +39,10 @@ int main() {
     cfg::g_cfg.rage.min_damage = 1;
     aim = ragebot_run(local, players, 1);
     CHECK(aim.fire && aim.damage > 0, "fires when damage/hitchance/ready");
+    cfg::g_cfg.rage.force_baim = true;
+    aim = ragebot_run(local, players, 1);
+    CHECK(aim.has_target && aim.hitbox != HB_HEAD, "force baim never picks the head");
+    cfg::g_cfg.rage.force_baim = false;
 
     std::printf("[anti-aim]\n");
     cfg::g_cfg.aa.enabled = true; cfg::g_cfg.aa.yaw_base = 1; cfg::g_cfg.aa.yaw_jitter = 0;
@@ -85,10 +89,12 @@ int main() {
 
     std::printf("[pipeline]\n");
     cfg::g_cfg.rage.min_damage = 1;
+    cfg::g_cfg.rage.auto_stop = true;
     TickInput in; in.local = local; in.players = players; in.view_yaw = 0.f; in.tick = 12;
-    UserCmd pc;
+    UserCmd pc; pc.forwardmove = 250.f; pc.sidemove = 250.f;
     TickOutput o = create_move(&pc, in);
     CHECK((pc.buttons & IN_ATTACK) != 0 && o.aim.fire, "create_move fires through the pipeline");
+    CHECK(pc.forwardmove == 0.f && pc.sidemove == 0.f, "auto stop zeroes movement on fire");
 
     std::printf(fails ? "\n%d check(s) FAILED\n" : "\nall checks passed\n", fails);
     return fails ? 1 : 0;

@@ -25,7 +25,9 @@ inline void movement_run(sdk::UserCmd* cmd, const sdk::Player& local,
     // turn so air-acceleration gains speed (sign follows the mouse turn).
     if (c.auto_strafe && !local.on_ground) {
         cmd->forwardmove = 0.f;
-        cmd->sidemove = (yaw_delta >= 0.f) ? MAXMOVE : -MAXMOVE;
+        // "strafe smooth" eases the air-steer magnitude (0% = gentle, 100% = full).
+        float k = 0.5f + 0.5f * std::clamp(c.auto_strafe_smooth / 100.f, 0.f, 1.f);
+        cmd->sidemove = ((yaw_delta >= 0.f) ? MAXMOVE : -MAXMOVE) * k;
         return;
     }
 

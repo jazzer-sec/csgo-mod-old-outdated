@@ -16,7 +16,7 @@ void Menu::Draw(Render2D& r, float openT)
     oy = (1.f - e) * 14.f;
     live = openT >= 0.999f; // only react to the mouse once fully open
 
-    const float w = 584, h = 360, sideW = 152;
+    const float w = 584, h = 410, sideW = 152;
     const float x = (r.width() - w) / 2.f;   // center the window on screen
     const float y = (r.height() - h) / 2.f;
 
@@ -168,99 +168,114 @@ void Menu::contentHead(Render2D& r, float x, float y, float w, const std::string
 // ----------------------------------------------------------------------------
 void Menu::pageRage(Render2D& r, float lx, float rx, float colW, float by0)
 {
-    const Theme& t = theme();
     auto& c = cfg::g_cfg.rage;
-    float lcy = container(r, lx, by0, colW, 134, "aimbot");
+    float lcy = container(r, lx, by0, colW, 118, "aimbot");
     lcy = rowCheck (r, lx, lcy, colW, "enabled", &c.enabled);
-    lcy = rowSlider(r, lx, lcy, colW, "minimum damage", &c.min_damage, 0, 100);
-    comboAY = lcy;
-    lcy = rowCombo (r, lx, lcy, colW, "target", &c.target, cfg::kTarget, 4);
     lcy = rowCheck (r, lx, lcy, colW, "auto fire", &c.auto_fire, "mouse5");
-
-    lcy = container(r, lx, by0 + 144, colW, 92, "accuracy");
     lcy = rowCheck (r, lx, lcy, colW, "auto stop", &c.auto_stop);
     lcy = rowCheck (r, lx, lcy, colW, "auto scope", &c.auto_scope);
 
-    float rcy = container(r, rx, by0, colW, 134, "exploits");
+    lcy = container(r, lx, by0 + 128, colW, 138, "weapon");
+    lcy = rowSlider(r, lx, lcy, colW, "min damage", &c.min_damage, 0, 100);
+    lcy = rowSlider(r, lx, lcy, colW, "hitchance", &c.hitchance, 0, 100, "%");
+    comboAY = lcy;
+    lcy = rowCombo (r, lx, lcy, colW, "target", &c.target, cfg::kTarget, 4);
+    lcy = rowCheck (r, lx, lcy, colW, "aim head if safe", &c.aim_head_safe);
+
+    float rcy = container(r, rx, by0, colW, 128, "exploits");
     rcy = rowCheck (r, rx, rcy, colW, "double tap", &c.double_tap, "x");
     rcy = rowCheck (r, rx, rcy, colW, "hide shots", &c.hide_shots, "c");
+    rcy = rowCheck (r, rx, rcy, colW, "extended backtrack", &c.extended_backtrack);
     rcy = rowSlider(r, rx, rcy, colW, "shift amount", &c.shift_amount, 0, 16, "t");
 
-    rcy = container(r, rx, by0 + 144, colW, 92, "overrides");
-    rcy = rowSlider(r, rx, rcy, colW, "hitchance", &c.hitchance, 0, 100, "%");
-    rcy = rowColor (r, rx, rcy, colW, "accent", t.accent);
+    rcy = container(r, rx, by0 + 138, colW, 118, "overrides");
+    rcy = rowCheck (r, rx, rcy, colW, "force baim", &c.force_baim);
+    rcy = rowCheck (r, rx, rcy, colW, "delay shot", &c.delay_shot);
+    rcy = rowCheck (r, rx, rcy, colW, "accuracy boost", &c.accuracy_boost);
+    rcy = rowCheck (r, rx, rcy, colW, "peek assist", &c.peek_assist, "mouse4");
 }
 
 void Menu::pageAntiAim(Render2D& r, float lx, float rx, float colW, float by0)
 {
     auto& a = cfg::g_cfg.aa;
-    float lcy = container(r, lx, by0, colW, 120, "anti-aimbot");
+    float lcy = container(r, lx, by0, colW, 118, "angles");
     lcy = rowCheck (r, lx, lcy, colW, "enabled", &a.enabled);
-    lcy = rowCombo (r, lx, lcy, colW, "pitch", &a.pitch, cfg::kPitch, 3);
+    lcy = rowCombo (r, lx, lcy, colW, "pitch", &a.pitch, cfg::kPitch, 4);
     lcy = rowCombo (r, lx, lcy, colW, "yaw base", &a.yaw_base, cfg::kYawBase, 4);
     lcy = rowCombo (r, lx, lcy, colW, "yaw jitter", &a.yaw_jitter, cfg::kYawJitter, 4);
 
-    lcy = container(r, lx, by0 + 130, colW, 114, "desync");
+    lcy = container(r, lx, by0 + 128, colW, 138, "desync");
     lcy = rowSlider(r, lx, lcy, colW, "amount", &a.desync, 0, 100);
     lcy = rowCombo (r, lx, lcy, colW, "inverter", &a.inverter, cfg::kInverter, 2);
-    lcy = rowSlider(r, lx, lcy, colW, "body lean", &a.body_lean, 0, 100);
+    lcy = rowSlider(r, lx, lcy, colW, "body yaw", &a.body_lean, 0, 100);
+    lcy = rowCheck (r, lx, lcy, colW, "legacy desync", &a.legacy_desync);
 
-    float rcy = container(r, rx, by0, colW, 100, "on shot");
+    float rcy = container(r, rx, by0, colW, 118, "fake lag");
+    rcy = rowCheck (r, rx, rcy, colW, "enabled", &a.fake_lag, "shift");
+    rcy = rowSlider(r, rx, rcy, colW, "limit", &a.fl_limit, 0, 16, "t");
+    rcy = rowSlider(r, rx, rcy, colW, "variance", &a.fl_variance, 0, 100, "%");
+
+    rcy = container(r, rx, by0 + 128, colW, 198, "other");
     rcy = rowCheck (r, rx, rcy, colW, "fake duck", &a.fake_duck, "f");
     rcy = rowCheck (r, rx, rcy, colW, "defensive aa", &a.defensive);
-    rcy = rowCombo (r, rx, rcy, colW, "hide shots", &a.hide_shots, cfg::kHideShots, 3);
-
-    rcy = container(r, rx, by0 + 110, colW, 134, "manual");
-    rcy = rowCheck (r, rx, rcy, colW, "left", &a.manual_left, "left");
-    rcy = rowCheck (r, rx, rcy, colW, "right", &a.manual_right, "right");
-    rcy = rowCheck (r, rx, rcy, colW, "backward", &a.manual_back, "down");
-    rcy = rowCheck (r, rx, rcy, colW, "freestand", &a.freestand, "alt");
+    rcy = rowCheck (r, rx, rcy, colW, "slow walk", &a.slow_walk, "alt");
+    rcy = rowCheck (r, rx, rcy, colW, "jitter move", &a.jitter_move);
+    rcy = rowCheck (r, rx, rcy, colW, "manual left", &a.manual_left, "left");
+    rcy = rowCheck (r, rx, rcy, colW, "manual right", &a.manual_right, "right");
+    rcy = rowCheck (r, rx, rcy, colW, "manual back", &a.manual_back, "down");
+    rcy = rowCheck (r, rx, rcy, colW, "freestand", &a.freestand, "f1");
 }
 
 void Menu::pageVisuals(Render2D& r, float lx, float rx, float colW, float by0)
 {
-    const Theme& t = theme();
     auto& v = cfg::g_cfg.visuals;
-    float lcy = container(r, lx, by0, colW, 134, "players");
+    float lcy = container(r, lx, by0, colW, 138, "players");
     lcy = rowCheck (r, lx, lcy, colW, "enabled", &v.players);
     lcy = rowCombo (r, lx, lcy, colW, "boxes", &v.boxes, cfg::kBoxes, 3);
     lcy = rowCheck (r, lx, lcy, colW, "skeleton", &v.skeleton);
     lcy = rowCheck (r, lx, lcy, colW, "health bar", &v.health);
+    lcy = rowCheck (r, lx, lcy, colW, "name", &v.name);
 
-    lcy = container(r, lx, by0 + 144, colW, 92, "effects");
-    lcy = rowCombo (r, lx, lcy, colW, "chams", &v.chams, cfg::kChams, 4);
-    lcy = rowCheck (r, lx, lcy, colW, "hit marker", &v.hit_marker);
+    lcy = container(r, lx, by0 + 148, colW, 128, "world");
+    lcy = rowCombo (r, lx, lcy, colW, "remove scope", &v.remove_scope, cfg::kRemoveScope, 3);
+    lcy = rowSlider(r, lx, lcy, colW, "field of view", &v.fov, 70, 120);
+    lcy = rowCheck (r, lx, lcy, colW, "third person", &v.force_thirdperson, "n");
+    lcy = rowCheck (r, lx, lcy, colW, "night mode", &v.night_mode);
 
-    float rcy = container(r, rx, by0, colW, 92, "world");
-    rcy = rowCheck (r, rx, rcy, colW, "remove scope", &v.remove_scope);
-    rcy = rowColor (r, rx, rcy, colW, "esp color", t.accent);
+    float rcy = container(r, rx, by0, colW, 78, "chams");
+    rcy = rowCombo (r, rx, rcy, colW, "material", &v.chams, cfg::kChams, 4);
+    rcy = rowCheck (r, rx, rcy, colW, "behind walls", &v.chams_behind);
 
-    rcy = container(r, rx, by0 + 102, colW, 134, "interface");
+    rcy = container(r, rx, by0 + 88, colW, 158, "interface");
     rcy = rowCheck (r, rx, rcy, colW, "watermark", &v.watermark);
     rcy = rowCheck (r, rx, rcy, colW, "keybinds", &v.keybinds);
     rcy = rowCheck (r, rx, rcy, colW, "spectators", &v.spectators);
     rcy = rowCheck (r, rx, rcy, colW, "hit log", &v.hit_log);
+    rcy = rowCheck (r, rx, rcy, colW, "hit marker", &v.hit_marker);
+    rcy = rowCheck (r, rx, rcy, colW, "damage marker", &v.damage_marker);
 }
 
 void Menu::pageMisc(Render2D& r, float lx, float rx, float colW, float by0)
 {
     auto& m = cfg::g_cfg.misc;
-    float lcy = container(r, lx, by0, colW, 114, "movement");
+    float lcy = container(r, lx, by0, colW, 168, "movement");
     lcy = rowCheck (r, lx, lcy, colW, "bunny hop", &m.bhop);
     lcy = rowCheck (r, lx, lcy, colW, "auto strafe", &m.auto_strafe);
+    lcy = rowSlider(r, lx, lcy, colW, "strafe smooth", &m.auto_strafe_smooth, 0, 100, "%");
     lcy = rowCheck (r, lx, lcy, colW, "fast stop", &m.fast_stop);
+    lcy = rowCheck (r, lx, lcy, colW, "edge jump", &m.edge_jump, "space");
+    lcy = rowCheck (r, lx, lcy, colW, "infinity duck", &m.infinity_duck);
 
-    lcy = container(r, lx, by0 + 124, colW, 92, "automation");
-    lcy = rowCheck (r, lx, lcy, colW, "auto accept", &m.auto_accept);
-    lcy = rowCheck (r, lx, lcy, colW, "auto pistol", &m.auto_pistol);
-
-    float rcy = container(r, rx, by0, colW, 114, "misc");
+    float rcy = container(r, rx, by0, colW, 98, "automation");
+    rcy = rowCheck (r, rx, rcy, colW, "auto accept", &m.auto_accept);
+    rcy = rowCheck (r, rx, rcy, colW, "auto pistol", &m.auto_pistol);
     rcy = rowCheck (r, rx, rcy, colW, "anti aim-block", &m.anti_aimblock);
-    rcy = rowCheck (r, rx, rcy, colW, "fake lag", &m.fake_lag, "shift");
-    rcy = rowSlider(r, rx, rcy, colW, "fps boost", &m.fps_boost, 0, 3, "", cfg::kFps);
 
-    rcy = container(r, rx, by0 + 124, colW, 92, "camera");
-    rcy = rowCheck (r, rx, rcy, colW, "third person", &m.third_person, "n");
+    rcy = container(r, rx, by0 + 108, colW, 148, "other");
+    rcy = rowCheck (r, rx, rcy, colW, "anti untrusted", &m.anti_untrusted);
+    rcy = rowCheck (r, rx, rcy, colW, "clantag", &m.clantag);
+    rcy = rowCheck (r, rx, rcy, colW, "ad block", &m.ad_block);
+    rcy = rowSlider(r, rx, rcy, colW, "fps boost", &m.fps_boost, 0, 3, "", cfg::kFps);
     rcy = rowCheck (r, rx, rcy, colW, "free cam", &m.free_cam, "m");
 }
 

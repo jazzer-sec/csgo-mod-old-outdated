@@ -32,6 +32,7 @@ inline TickOutput create_move(sdk::UserCmd* cmd, const TickInput& in) {
         sdk::Vec3 d = o.aim.point - in.local.eye;
         cmd->viewangles.y = std::atan2(d.y, d.x) * 180.f / 3.14159265f;
         cmd->viewangles.x = -std::atan2(d.z, d.length2d()) * 180.f / 3.14159265f;
+        if (cfg::g_cfg.rage.auto_stop) { cmd->forwardmove = 0.f; cmd->sidemove = 0.f; }
     } else {
         o.aa = anti_aim_apply(cmd, in.local, in.players, in.view_yaw, in.tick);
     }

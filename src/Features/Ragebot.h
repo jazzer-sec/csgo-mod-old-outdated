@@ -56,9 +56,12 @@ inline AimResult best_point(const sdk::Player& local, const sdk::Player& tgt, in
     int bestScore = -1;
     for (int i = 0; i < nhb; ++i) {
         int hb = hbs[i];
+        if (hb == sdk::HB_HEAD && c.force_baim) continue;   // body aim only
         sdk::HitboxInfo hbi = sdk::hitbox_info(tgt, hb);
         multipoints(hbi, pts, safe);
         for (size_t k = 0; k < pts.size(); ++k) {
+            // "aim head if safe": only take the head on its safe (center) point
+            if (hb == sdk::HB_HEAD && c.aim_head_safe && !safe[k]) continue;
             int dmg = sdk::get_damage(local, tgt, hb, pts[k]);
             if (dmg < c.min_damage) continue;
             int hc = sdk::hitchance(local, tgt, hb, pts[k], tick);

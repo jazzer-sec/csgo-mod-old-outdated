@@ -87,7 +87,22 @@ inline void app_status(Render2D& r, const AppState& st) {
         if (a.safe_point) line += "  [safe]";
     }
     r.Text(14, 28, line, a.fire ? t.accent : t.textDim, 1);
-    r.Text(14, 44, "INSERT: menu    ESC: quit", t.textFaint, 1);
+
+    // live readout of enabled modules — flips as you toggle things in the menu
+    const auto& C = cfg::g_cfg;
+    std::string on = "active: ";
+    if (C.rage.enabled)      on += "rage ";
+    if (C.rage.double_tap)   on += "dt ";
+    if (C.rage.hide_shots)   on += "hs ";
+    if (C.rage.force_baim)   on += "baim ";
+    if (C.aa.enabled)        on += "aa ";
+    if (C.aa.fake_duck)      on += "fakeduck ";
+    if (C.aa.fake_lag)       on += "fakelag ";
+    if (C.aa.freestand)      on += "freestand ";
+    if (C.misc.bhop)         on += "bhop ";
+    if (C.misc.auto_strafe)  on += "strafe ";
+    r.Text(14, 44, on, t.textDim, 1);
+    r.Text(14, 60, "INSERT: menu    ESC: quit", t.textFaint, 1);
 }
 
 // One full frame: sim -> scene/overlays -> status -> menu. `toggleMenu` is the
