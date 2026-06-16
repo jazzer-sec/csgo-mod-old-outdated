@@ -59,10 +59,14 @@ void Render2D::Circle(float cx, float cy, float rad, float thick, Color c) {
 
 void Render2D::GlowCircle(float cx, float cy, float rad, Color c) {
     if (!dl_) return;
-    // soft-ish: a few stacked translucent discs
-    for (int i = 3; i >= 1; --i) {
-        Color g = c; g.a = (uint8_t)(c.a / (i + 1));
-        dl_->AddCircleFilled(v(cx, cy), rad * i / 3.f, col(g));
+    // smooth radial fade: many concentric discs, quadratic falloff to the edge
+    // (matches the software backend's per-pixel f*f glow).
+    const int steps = 40;
+    for (int i = steps; i >= 1; --i) {
+        float f = (float)i / steps;        // 1 at edge -> ~0 at center
+        float a = (1.f - f) * (1.f - f);   // bright center, transparent rim
+        Color g = c; g.a = (uint8_t)(c.a * a);
+        dl_->AddCircleFilled(v(cx, cy), rad * f, col(g), 64);
     }
 }
 
