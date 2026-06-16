@@ -31,6 +31,11 @@ struct FontFace {
             // macOS Arial (widely present)
             "/Library/Fonts/Arial.ttf",
             "/System/Library/Fonts/Supplemental/Arial.ttf",
+            // Windows
+            "C:\\Windows\\Fonts\\verdana.ttf",
+            "C:\\Windows\\Fonts\\arial.ttf",
+            "C:\\Windows\\Fonts\\segoeui.ttf",
+            "C:\\Windows\\Fonts\\tahoma.ttf",
         };
         for (const char* path : candidates)
             if (!FT_New_Face(lib, path, 0, &face)) { ok = true; return; }
