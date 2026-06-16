@@ -5,28 +5,57 @@
 #include <cmath>
 #include <string>
 
-// Premium on-inject splash for "knicksware", as a sequence:
-//   1. "knicks" eases in (fade + slide)
-//   2. "ware" slides out to the right while the whole wordmark recenters
-//   3. a little basketball arcs into a hoop above the wordmark; loader fills
-//   4. scene-1 out: the made shot drops and the wordmark lifts/fades away
-//   5. "how bout them knicks?" revealed by a horizontal slash, more prominent
-//   6. tagline out
+// Premium on-inject splash for "knicksware", as a snappy sequence:
+//   1. "knicks" pops in (overshoot)
+//   2. "ware" snaps out to the right while the wordmark recenters
+//   3. a spinning basketball (with motion trail) arcs into a hoop; loader fills
+//   4. the made shot bursts (sparks + swish) and scene 1 lifts/fades away
+//   5. "how bout them knicks?" blooms open from the center outward, letters
+//      revealing from the middle to the sides behind an expanding beam
+//   6. tagline animates out
 // Cosmetic only (no hooks). Drawn through Render2D so every backend matches.
 struct Splash {
-    static constexpr float DUR = 5.4f;
+    static constexpr float DUR = 5.0f;
     float t = -1.f;                 // < 0 = inactive
 
     void start() { t = 0.f; }
     bool active() const { return t >= 0.f; }
     void update(float dt) { if (t >= 0.f) { t += dt; if (t > DUR) t = -1.f; } }
 
-    // 0..1 ramp over [a,b]
     static float seg(float x, float a, float b) {
         if (b <= a) return x >= b ? 1.f : 0.f;
         return std::clamp((x - a) / (b - a), 0.f, 1.f);
     }
-    static float smooth(float x) { return ease_out_cubic(std::clamp(x, 0.f, 1.f)); }
+
+    // a spinning basketball: orange disc, outline, rotating cross + curved seams
+    static void ball(Render2D& r, float bx, float by, float rad, float ang, float a) {
+        if (rad < 0.6f) return;
+        Color orange(224, 132, 56), seam(18, 20, 22, 235);
+        r.CircleFilled(bx, by, rad, orange.withAf(a));
+        r.Circle(bx, by, rad, 1.3f, seam.withAf(a));
+        float ca = std::cos(ang), sa = std::sin(ang);
+        auto rot = [&](float x, float y, float& ox, float& oy) {
+            ox = bx + x * ca - y * sa; oy = by + x * sa + y * ca;
+        };
+        // two diameters (the cross seams)
+        float x0, y0, x1, y1;
+        rot(-rad, 0, x0, y0); rot(rad, 0, x1, y1);
+        r.Line(x0, y0, x1, y1, seam.withAf(a), 1.2f);
+        rot(0, -rad, x0, y0); rot(0, rad, x1, y1);
+        r.Line(x0, y0, x1, y1, seam.withAf(a), 1.2f);
+        // two curved vertical seams bulging left/right
+        for (int s = -1; s <= 1; s += 2) {
+            float px = 0, py = 0; bool have = false;
+            for (int k = 0; k <= 8; ++k) {
+                float u = k / 8.f;
+                float lx = (float)s * std::sin(u * 3.14159f) * rad * 0.62f;
+                float ly = (u - 0.5f) * 2.f * rad;
+                float ox, oy; rot(lx, ly, ox, oy);
+                if (have) r.Line(px, py, ox, oy, seam.withAf(a), 1.f);
+                px = ox; py = oy; have = true;
+            }
+        }
+    }
 
     void draw(Render2D& r) const {
         if (t < 0.f) return;
@@ -34,88 +63,95 @@ struct Splash {
         const float W = (float)r.width(), H = (float)r.height();
         const float cx = W * 0.5f, cy = H * 0.5f;
 
-        // ---- timeline ----
-        const float scrimIn  = smooth(seg(t, 0.0f, 0.45f));
-        const float scrimOut = 1.f - seg(t, DUR - 0.5f, DUR);
-        const float A = scrimIn * scrimOut;                 // global opacity
+        // ---- snappy timeline ----
+        const float scrimIn  = ease_out_cubic(seg(t, 0.0f, 0.35f));
+        const float scrimOut = 1.f - seg(t, DUR - 0.45f, DUR);
+        const float A = scrimIn * scrimOut;
 
-        const float knIn   = smooth(seg(t, 0.30f, 1.05f));  // "knicks" in
-        const float rec    = smooth(seg(t, 1.05f, 1.95f));  // "ware" out + recenter
-        const float undr   = smooth(seg(t, 1.7f, 2.2f));    // underline
-        const float load   = ease_in_out(seg(t, 1.0f, 3.0f)); // loader fill
-        const float shot   = smooth(seg(t, 2.0f, 3.0f));    // ball arc into hoop
-        const float s1out  = smooth(seg(t, 3.05f, 3.6f));   // scene-1 leaves
-        const float tagIn  = smooth(seg(t, 3.5f, 4.2f));    // tagline slash in
-        const float tagOut = smooth(seg(t, 4.7f, 5.3f));    // tagline leaves
+        const float knIn  = ease_out_back(seg(t, 0.20f, 0.70f));   // "knicks" pop
+        const float rec   = ease_out_back(seg(t, 0.70f, 1.20f));   // "ware" snap + recenter
+        const float undr  = ease_out_cubic(seg(t, 1.10f, 1.45f));
+        const float load  = ease_in_out(seg(t, 0.7f, 2.4f));
+        const float shot  = seg(t, 1.45f, 2.35f);                  // ball travel (linear-ish)
+        const float make  = seg(t, 2.30f, 2.75f);                  // swish burst
+        const float s1out = ease_out_cubic(seg(t, 2.55f, 3.1f));
+        const float tagIn = seg(t, 3.0f, 3.85f);
+        const float tagOut= ease_out_cubic(seg(t, 4.35f, 4.95f));
 
-        // dark scrim + smooth radial glow behind the wordmark
+        // dark scrim + smooth radial glow
         r.BoxFilled(0, 0, W, H, Color(8, 9, 11).withAf(0.96f * A));
-        r.GlowCircle(cx, cy - 4, 280, th.accent.withA(30).withAf(A * (1.f - tagIn * 0.6f)));
+        r.GlowCircle(cx, cy - 4, 280, th.accent.withA(28).withAf(A * (1.f - tagIn)));
 
-        // ===================== scene 1: wordmark + hoop + loader =====================
+        // ===================== scene 1 =====================
         const float s1A = A * (1.f - s1out);
         if (s1A > 0.002f) {
-            const float lift = s1out * 26.f;               // whole scene lifts on out
+            const float lift = s1out * 30.f;
 
-            // wordmark layout
             const std::string kn = "knicks", wa = "ware";
-            const float wK = (float)r.TextWidth(kn, 4);
-            const float wW = (float)r.TextWidth(wa, 4);
+            const float wK = (float)r.TextWidth(kn, 4), wW = (float)r.TextWidth(wa, 4);
             const float total = wK + wW;
-            const float knSolo  = cx - wK * 0.5f;           // "knicks" centered alone
-            const float knFinal = cx - total * 0.5f;        // in the full wordmark
-            const float knX = knSolo + (knFinal - knSolo) * rec;
-            const float waSlide = (1.f - rec) * 22.f;       // "ware" slides in from right
-            const float waX = knX + wK + waSlide;
-            const float wy = cy - 30 - lift + (1.f - knIn) * 12.f;
+            const float knSolo = cx - wK * 0.5f, knFinal = cx - total * 0.5f;
+            const float knX = knSolo + (knFinal - knSolo) * std::clamp(rec, 0.f, 1.f);
+            const float waX = knX + wK + (1.f - std::clamp(rec, 0.f, 1.f)) * 26.f;
+            const float wy = cy - 30 - lift + (1.f - std::clamp(knIn, 0.f, 1.f)) * 14.f;
 
-            r.Text(knX, wy, kn, th.accent.withAf(s1A * knIn), 4);
-            r.Text(waX, wy, wa, th.text.withAf(s1A * rec), 4);
+            r.Text(knX, wy, kn, th.accent.withAf(s1A * std::clamp(knIn, 0.f, 1.f)), 4);
+            r.Text(waX, wy, wa, th.text.withAf(s1A * std::clamp(rec, 0.f, 1.f)), 4);
 
-            // underline grows from center
             const float uw = (total + 16.f) * undr;
             const float uy = wy + 46;
             r.RoundedBox(cx - uw * 0.5f, uy, uw, 2.f, 1.f, th.accent.withAf(s1A));
 
-            // ---- basketball + hoop above the wordmark ----
-            const float hx = cx, hy = cy - 116 - lift;      // rim center
-            const float rimW = 34.f, rimH = 9.f;
-            // backboard
+            // ---- hoop above the wordmark ----
+            const float hx = cx, hy = cy - 116 - lift, rimW = 34.f;
             r.RoundedBox(hx - 26, hy - 34, 52, 30, 3, th.field.withAf(s1A * 0.9f));
             r.RoundedBoxOutline(hx - 26, hy - 34, 52, 30, 3, 1.f, th.line.withAf(s1A));
-            r.RoundedBoxOutline(hx - 9, hy - 26, 18, 13, 2, 1.f, th.accent.withAf(s1A * 0.8f)); // shooter's square
-            // rim (orange) + simple net
-            Color rim(214, 124, 54);
+            r.RoundedBoxOutline(hx - 9, hy - 26, 18, 13, 2, 1.f, th.accent.withAf(s1A * 0.8f));
+            Color rim(224, 132, 56);
             r.Line(hx - rimW * 0.5f, hy, hx + rimW * 0.5f, hy, rim.withAf(s1A), 2.4f);
-            const float swish = std::sin(std::clamp((shot - 0.7f) * 12.f, 0.f, 3.14159f)) * (1.f - s1out);
+            // net (swishes on the make)
+            float swish = std::sin(make * 3.14159f) * 4.f;
             for (int i = 0; i <= 4; ++i) {
                 float fx = hx - rimW * 0.5f + rimW * (i / 4.f);
-                float nx = hx - (hx - fx) * 0.5f + swish * 3.f;
-                r.Line(fx, hy, nx, hy + 14, th.textDim.withAf(s1A * 0.7f), 1.f);
+                float nx = hx - (hx - fx) * 0.45f + swish;
+                r.Line(fx, hy, nx, hy + 15, th.textDim.withAf(s1A * 0.7f), 1.f);
             }
 
-            // ball: lobs from lower-left up and down through the rim, then drops on out
-            float u = shot;                                  // 0..1 to the rim
-            float bx, by;
-            if (s1out <= 0.f) {
-                float x0 = hx - 150, y0 = cy - 40;
+            // ---- ball arc (with spin + motion trail) ----
+            auto ballPos = [&](float u, float& bx, float& by) {
+                float x0 = hx - 165, y0 = cy - 30;
                 bx = x0 + (hx - x0) * u;
-                by = y0 + (hy - y0) * u - 70.f * 4.f * u * (1.f - u); // lob arc
-            } else {
-                bx = hx;                                      // made -> falls straight down
-                by = hy + s1out * 220.f;
-            }
-            float bA = s1A;
-            if (shot > 0.f || s1out > 0.f) {
-                float br = 9.f;
-                r.CircleFilled(bx, by, br, rim.withAf(bA));
-                Color seam(18, 20, 22, 220);
-                r.Circle(bx, by, br, 1.2f, seam.withAf(bA));
-                r.Line(bx - br, by, bx + br, by, seam.withAf(bA), 1.f);
-                r.Line(bx, by - br, bx, by + br, seam.withAf(bA), 1.f);
+                by = y0 + (hy - y0) * u - 78.f * 4.f * u * (1.f - u);
+            };
+            if (s1out <= 0.f && shot > 0.f) {
+                // trail
+                for (int i = 5; i >= 1; --i) {
+                    float u = shot - i * 0.045f;
+                    if (u <= 0.f) continue;
+                    float gx, gy; ballPos(u, gx, gy);
+                    ball(r, gx, gy, 9.f * (1.f - i * 0.12f), shot * 9.f, s1A * (0.10f * (6 - i)));
+                }
+                float bx, by; ballPos(shot, bx, by);
+                ball(r, bx, by, 9.f, shot * 9.f, s1A);
+            } else if (s1out > 0.f) {
+                ball(r, hx, hy + s1out * 240.f, 9.f, s1out * 6.f, s1A); // made -> drops through
             }
 
-            // loader
+            // ---- swish burst at the rim ----
+            if (make > 0.f && make < 1.f) {
+                float k = make;
+                r.GlowCircle(hx, hy, 14 + 34 * k, rim.withA((int)(180 * (1.f - k))).withAf(s1A));
+                for (int i = 0; i < 8; ++i) {
+                    float a = i / 8.f * 6.2832f;
+                    float r0 = 8 + 26 * k, r1 = r0 + 9;
+                    Color sp = (i % 2 ? th.accent : rim);
+                    r.Line(hx + std::cos(a) * r0, hy + std::sin(a) * r0,
+                           hx + std::cos(a) * r1, hy + std::sin(a) * r1,
+                           sp.withA((int)(220 * (1.f - k))).withAf(s1A), 1.6f);
+                }
+            }
+
+            // ---- loader ----
             const float barW = 230.f, barH = 3.f;
             const float lx = cx - barW * 0.5f, ly = cy + 70 - lift;
             r.RoundedBox(lx, ly, barW, barH, 1.5f, th.field.withAf(s1A * 0.9f));
@@ -127,21 +163,46 @@ struct Splash {
                 th.textFaint.withAf(s1A), 1);
         }
 
-        // ===================== scene 2: tagline (horizontal slash reveal) =============
-        const float tagA = A * tagIn * (1.f - tagOut);
-        if (tagA > 0.002f) {
+        // ===================== scene 2: tagline blooms from center outward =========
+        const float tagA = A * (1.f - tagOut);
+        if (tagIn > 0.f && tagA > 0.002f) {
             const std::string tag = "how bout them knicks?";
             const float ty = cy - 4;
-            // the "slash": a bright accent line sweeps/expands across, carrying the text
-            const float reach = (W * 0.36f) * tagIn * (1.f - tagOut);
-            const float ly = ty + 20;
-            // thin streak with a hot leading edge
+            const float ly = ty + 22;
+            const float openE = ease_out_cubic(tagIn);
+
+            // soft bloom growing from the center, behind the text
+            float bloom = (40.f + 240.f * openE) * (1.f - tagOut);
+            r.GlowCircle(cx, ty, bloom, th.accent.withA(34).withAf(A * (1.f - tagOut)));
+
+            // beam expanding from the center to both sides, hot core + flying ends
+            float reach = (W * 0.34f) * openE * (1.f - tagOut);
             r.RoundedBox(cx - reach, ly, reach * 2.f, 2.f, 1.f, th.accent.withAf(tagA));
-            r.GlowCircle(cx + reach, ly + 1, 14, th.accent2.withA(170).withAf(tagA));
-            r.GlowCircle(cx - reach, ly + 1, 14, th.accent2.withA(170).withAf(tagA));
-            // tagline, prominent (scale 3), riding the reveal + a small settle
-            float slide = (1.f - tagIn) * 8.f - tagOut * 10.f;
-            r.TextCentered(cx, ty - 12 + slide, tag, th.text.withAf(tagA), 3);
+            r.GlowCircle(cx, ly + 1, 16 * (1.f - tagOut), th.text.withA(160).withAf(tagA));
+            r.GlowCircle(cx + reach, ly + 1, 13, th.accent2.withA(180).withAf(tagA));
+            r.GlowCircle(cx - reach, ly + 1, 13, th.accent2.withA(180).withAf(tagA));
+            // thin outward streaks above/below for extra flair
+            for (int s = -1; s <= 1; s += 2) {
+                float yy = ly + s * 7.f;
+                float rr = reach * 0.82f;
+                r.RoundedBox(cx - rr, yy, rr * 2.f, 1.f, 0.5f, th.accent.withA(70).withAf(tagA));
+            }
+
+            // text revealed from the middle outward (letters near center first)
+            float totalW = (float)r.TextWidth(tag, 3);
+            float penX = cx - totalW * 0.5f;
+            float revealR = (totalW * 0.62f) * openE + 8.f; // expands past the ends
+            for (char ch : tag) {
+                std::string s(1, ch);
+                float cw = (float)r.TextWidth(s, 3);
+                float charCx = penX + cw * 0.5f;
+                float dist = std::fabs(charCx - cx);
+                float a = smoothstep01((revealR - dist) / 26.f) * tagA;
+                float rise = (1.f - a / (tagA + 1e-4f)) * 7.f;
+                if (a > 0.003f)
+                    r.Text(penX, ty - r.TextHeight(3) * 0.5f - rise, s, th.text.withAf(a), 3);
+                penX += cw;
+            }
         }
     }
 };

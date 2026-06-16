@@ -20,6 +20,20 @@ inline float ease_in_out(float t) {
                     : 1.f - std::pow(-2.f * t + 2.f, 3.f) / 2.f;
 }
 
+// snappy overshoot — eases past the target then settles (premium "pop")
+inline float ease_out_back(float t) {
+    t = std::clamp(t, 0.f, 1.f);
+    const float c1 = 1.70158f, c3 = c1 + 1.f;
+    float u = t - 1.f;
+    return 1.f + c3 * u * u * u + c1 * u * u;
+}
+
+// smoothstep 0..1
+inline float smoothstep01(float t) {
+    t = std::clamp(t, 0.f, 1.f);
+    return t * t * (3.f - 2.f * t);
+}
+
 struct Anim {
     float cur = 0.f;
     float target = 0.f;
