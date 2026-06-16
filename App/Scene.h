@@ -27,6 +27,9 @@ struct AppState {
     std::vector<sdk::Player> bots;
     float orbit = 0.f;      // bots circle the local player
     feat::TickOutput last;  // most recent pipeline result (for the status line)
+
+    std::vector<uint8_t> bg; // cached static backdrop+world (rasterized once)
+    bool bgReady = false;
 };
 
 inline void app_init(AppState& st) {
@@ -97,9 +100,17 @@ inline void app_frame(Render2D& r, AppState& st, const Menu::Input& in,
 
     app_sim(st, dt);
 
-    r.Clear(Color(0, 0, 0));
-    Hud::DrawBackdrop(r);
-    Hud::DrawWorld(r);
+    // The backdrop + world are fully static, so rasterize them once and restore
+    // from the cache each frame; only the cfg-driven overlays/menu redraw.
+    if (!st.bgReady) {
+        r.Clear(Color(0, 0, 0));
+        Hud::DrawBackdrop(r);
+        Hud::DrawWorld(r);
+        st.bg.assign(r.data(), r.data() + (size_t)r.width() * r.height() * 4);
+        st.bgReady = true;
+    } else {
+        r.Blit(st.bg.data());
+    }
     Hud::DrawOverlays(r);
     app_status(r, st);
 

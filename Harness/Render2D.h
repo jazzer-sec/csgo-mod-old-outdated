@@ -44,6 +44,12 @@ public:
         for (int i = 0; i < W * H; ++i) setRaw(i, c);
     }
 
+    // Overwrite the whole framebuffer from a same-size RGBA buffer (used to
+    // restore a cached static background instead of re-rasterizing it).
+    void Blit(const uint8_t* src) {
+        std::copy(src, src + (size_t)W * H * 4, px.begin());
+    }
+
     // Single pixel, alpha-blended, with coverage (for AA).
     void Blend(int x, int y, Color c, float cov = 1.f) {
         if (x < 0 || y < 0 || x >= W || y >= H) return;

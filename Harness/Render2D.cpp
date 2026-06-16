@@ -9,6 +9,7 @@
 #ifndef _WIN32
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <unordered_map>
 
 // Antialiased text via FreeType, using DejaVu Sans as a Verdana stand-in
 // (Verdana is proprietary / not present; DejaVu is the closest free analog —
@@ -73,6 +74,49 @@ std::vector<uint32_t> utf8_decode(const std::string& s) {
         out.push_back(cp);
     }
     return out;
+}
+
+// Glyph cache: rasterize each (size, codepoint) once with FreeType and reuse the
+// coverage bitmap every frame, instead of re-rendering on every Text() call.
+struct CGlyph { int w = 0, h = 0, left = 0, top = 0, adv = 0; std::vector<uint8_t> cov; };
+std::unordered_map<uint64_t, CGlyph> g_glyphs;
+std::unordered_map<int, int> g_ascent;
+int g_curPx = -1;
+
+void setPx(int px) {
+    if (g_curPx == px) return;
+    FontFace& f = font();
+    if (!f.ok) return;
+    FT_Set_Pixel_Sizes(f.face, 0, px);
+    g_curPx = px;
+    g_ascent[px] = f.face->size->metrics.ascender >> 6;
+}
+
+const CGlyph* glyph(int px, uint32_t cp) {
+    uint64_t k = ((uint64_t)px << 32) | cp;
+    auto it = g_glyphs.find(k);
+    if (it != g_glyphs.end()) return &it->second;
+    FontFace& f = font();
+    if (!f.ok) return nullptr;
+    setPx(px);
+    if (FT_Load_Char(f.face, cp, FT_LOAD_RENDER)) return nullptr;
+    FT_GlyphSlot gs = f.face->glyph;
+    const FT_Bitmap& bm = gs->bitmap;
+    CGlyph cg;
+    cg.w = bm.width; cg.h = bm.rows;
+    cg.left = gs->bitmap_left; cg.top = gs->bitmap_top;
+    cg.adv = gs->advance.x >> 6;
+    cg.cov.resize((size_t)cg.w * cg.h);
+    for (int row = 0; row < cg.h; ++row)
+        for (int col = 0; col < cg.w; ++col)
+            cg.cov[(size_t)row * cg.w + col] = bm.buffer[row * bm.pitch + col];
+    return &g_glyphs.emplace(k, std::move(cg)).first->second;
+}
+
+int ascentFor(int px) {
+    setPx(px);
+    auto it = g_ascent.find(px);
+    return it != g_ascent.end() ? it->second : px;
 }
 
 } // namespace
@@ -179,13 +223,11 @@ struct Glyph { unsigned char w; unsigned char rows[7]; };
 };
 
 int Render2D::TextWidth(const std::string& s, int scale) const {
-    auto& f = font();
-    if (!f.ok) return 0;
-    FT_Set_Pixel_Sizes(f.face, 0, pxForScale(scale));
+    int px = pxForScale(scale);
     long w = 0;
     for (uint32_t cp : utf8_decode(s)) {
-        if (FT_Load_Char(f.face, cp, FT_LOAD_DEFAULT)) continue;
-        w += f.face->glyph->advance.x >> 6;
+        const CGlyph* g = glyph(px, cp);
+        if (g) w += g->adv;
     }
     return (int)w;
 }
@@ -194,25 +236,20 @@ int Render2D::TextHeight(int scale) const { return pxForScale(scale); }
 
 void Render2D::Text(float x, float y, const std::string& s, Color c, int scale)
 {
-    auto& f = font();
-    if (!f.ok) return;
     int px = pxForScale(scale);
-    FT_Set_Pixel_Sizes(f.face, 0, px);
-    int ascent = f.face->size->metrics.ascender >> 6;
     float pen = x;
-    float baseline = y + ascent - 1; // ~top-aligned to y
+    float baseline = y + ascentFor(px) - 1; // ~top-aligned to y
     for (uint32_t cp : utf8_decode(s)) {
-        if (FT_Load_Char(f.face, cp, FT_LOAD_RENDER)) continue;
-        FT_GlyphSlot g = f.face->glyph;
-        const FT_Bitmap& bm = g->bitmap;
-        int gx = (int)std::lround(pen) + g->bitmap_left;
-        int gy = (int)std::lround(baseline) - g->bitmap_top;
-        for (unsigned row = 0; row < bm.rows; ++row)
-            for (unsigned col = 0; col < bm.width; ++col) {
-                unsigned char a = bm.buffer[row * bm.pitch + col];
+        const CGlyph* g = glyph(px, cp);
+        if (!g) continue;
+        int gx = (int)std::lround(pen) + g->left;
+        int gy = (int)std::lround(baseline) - g->top;
+        for (int row = 0; row < g->h; ++row)
+            for (int col = 0; col < g->w; ++col) {
+                unsigned char a = g->cov[(size_t)row * g->w + col];
                 if (a) Blend(gx + col, gy + row, c, a / 255.f);
             }
-        pen += g->advance.x >> 6;
+        pen += g->adv;
     }
 }
 #endif // !_WIN32
