@@ -11,15 +11,17 @@
 #include "../Harness/Anim.h"
 #include "../Harness/Hud.h"
 #include "../Harness/Menu.h"
+#include "Splash.h"
 #include "../src/Features/FeatureManager.h"
 #include <cmath>
 #include <string>
 #include <vector>
 
 struct AppState {
-    Menu  menu;
-    Anim  open{0.f};        // menu open/close factor (eased)
-    bool  menuTarget = false;
+    Menu   menu;
+    Splash splash;          // on-inject "knicksware" splash
+    Anim   open{0.f};       // menu open/close factor (eased)
+    bool   menuTarget = false;
 
     // simulated scene
     sdk::Weapon weapon;
@@ -136,4 +138,9 @@ inline void app_frame(Render2D& r, AppState& st, const Menu::Input& in,
         st.menu.frameDt = dt;
         st.menu.Draw(r, st.open.cur);
     }
+
+    // on-inject splash plays over everything; the menu button replays it
+    if (st.menu.replaySplash) { st.splash.start(); st.menu.replaySplash = false; }
+    st.splash.update(dt);
+    st.splash.draw(r);
 }

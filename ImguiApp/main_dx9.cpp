@@ -92,14 +92,15 @@ static void LoadFonts() {
         body = io.Fonts->AddFontFromFileTTF(p, 11.f, nullptr, ranges.Data);
         if (body) { chosen = p; break; }
     }
-    ImFont *head = nullptr, *word = nullptr;
+    ImFont *head = nullptr, *word = nullptr, *title = nullptr;
     if (chosen) {
-        head = io.Fonts->AddFontFromFileTTF(chosen, 16.f, nullptr, ranges.Data);
-        word = io.Fonts->AddFontFromFileTTF(chosen, 22.f, nullptr, ranges.Data);
+        head  = io.Fonts->AddFontFromFileTTF(chosen, 16.f, nullptr, ranges.Data);
+        word  = io.Fonts->AddFontFromFileTTF(chosen, 22.f, nullptr, ranges.Data);
+        title = io.Fonts->AddFontFromFileTTF(chosen, 38.f, nullptr, ranges.Data);
     } else {
-        body = head = word = io.Fonts->AddFontDefault();
+        body = head = word = title = io.Fonts->AddFontDefault();
     }
-    R2DImguiSetFonts(body, head, word);
+    R2DImguiSetFonts(body, head, word, title);
 }
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
@@ -131,6 +132,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
     Render2D r(W, H);
     AppState st;
     app_init(st);
+    st.splash.start();   // play the on-inject splash on launch
 
     while (g_running) {
         MSG msg;
@@ -167,6 +169,11 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
             st.menu.frameDt = dt;
             st.menu.Draw(r, st.open.cur);
         }
+
+        // on-inject splash over everything; menu button replays it
+        if (st.menu.replaySplash) { st.splash.start(); st.menu.replaySplash = false; }
+        st.splash.update(dt);
+        st.splash.draw(r);
 
         ImGui::EndFrame();
         g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, FALSE);

@@ -291,6 +291,11 @@ void Menu::pageConfigs(Render2D& r, float lx, float rx, float colW, float by0)
     rcy = rowButton(r, rx, rcy, colW, "save", false);
     rcy = rowButton(r, rx, rcy, colW, "create new", false);
     rcy = rowButton(r, rx, rcy, colW, "delete", false);
+
+    rcy = container(r, rx, by0 + 160, colW, 60, "splash");
+    bool rep = false;
+    rcy = rowButton(r, rx, rcy, colW, "replay inject splash", true, &rep);
+    if (rep) replaySplash = true;
 }
 
 float Menu::container(Render2D& r, float x, float y, float w, float h, const std::string& title)
@@ -385,12 +390,14 @@ float Menu::rowColor(Render2D& r, float x, float y, float w, const std::string& 
     return y + row;
 }
 
-float Menu::rowButton(Render2D& r, float x, float y, float w, const std::string& label, bool primary)
+float Menu::rowButton(Render2D& r, float x, float y, float w, const std::string& label,
+                      bool primary, bool* clicked)
 {
     const Theme& t = theme();
     const float pad = 12, bh = 22;
     float bx = x + pad, bw = w - pad * 2, by = Y(y + 3);
     bool over = hot(bx, y + 3, bw, bh);
+    if (over && input.clicked && clicked) *clicked = true;
     Color base = primary ? t.accent : t.field;
     if (over) base = primary ? t.accent2 : t.container2;
     r.RoundedBox(bx, by, bw, bh, 3, C(base));

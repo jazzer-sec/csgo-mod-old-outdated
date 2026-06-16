@@ -67,6 +67,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
     Render2D r(W, H);
     AppState st;
     app_init(st);
+    st.splash.start();   // play the on-inject splash on launch
     std::vector<uint8_t> bgra((size_t)W * H * 4);
 
     LARGE_INTEGER freq, prev;

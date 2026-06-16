@@ -6,18 +6,19 @@
 #include <cmath>
 
 namespace {
-ImFont* g_body = nullptr; // 11px
-ImFont* g_head = nullptr; // 16px
-ImFont* g_word = nullptr; // 22px
+ImFont* g_body = nullptr;  // 11px
+ImFont* g_head = nullptr;  // 16px
+ImFont* g_word = nullptr;  // 22px
+ImFont* g_title = nullptr; // 38px
 
 inline ImU32 col(Color c) { return IM_COL32(c.r, c.g, c.b, c.a); }
 inline ImVec2 v(float x, float y) { return ImVec2(x, y); }
-int pxForScale(int s) { return s <= 1 ? 11 : (s == 2 ? 16 : 22); }
-ImFont* fontForScale(int s) { return s <= 1 ? g_body : (s == 2 ? g_head : g_word); }
+int pxForScale(int s) { return s <= 1 ? 11 : (s == 2 ? 16 : (s == 3 ? 22 : 38)); }
+ImFont* fontForScale(int s) { return s <= 1 ? g_body : (s == 2 ? g_head : (s == 3 ? g_word : g_title)); }
 }
 
-void R2DImguiSetFonts(ImFont* body, ImFont* head, ImFont* word) {
-    g_body = body; g_head = head; g_word = word;
+void R2DImguiSetFonts(ImFont* body, ImFont* head, ImFont* word, ImFont* title) {
+    g_body = body; g_head = head; g_word = word; g_title = title;
 }
 
 void Render2D::BoxFilled(float x, float y, float w, float h, Color c) {

@@ -37,6 +37,7 @@ int main() {
     Render2D r(W, H);
     AppState st;
     app_init(st);
+    st.splash.start();   // play the on-inject splash on launch
 
     bool running = true;
     bool prevDown = false;

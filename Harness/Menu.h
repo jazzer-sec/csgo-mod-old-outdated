@@ -21,6 +21,7 @@ public:
     int   selectedConfig = 0;
     Input input;               // set each frame by the app; default = no interaction
     float frameDt = 0.f;       // set by the app for in-menu animation (0 = static)
+    bool  replaySplash = false;// set when the "replay splash" button is clicked
 
     // openT: 0 closed, 1 open (fade + slide-in). Interaction only when settled.
     void Draw(Render2D& r, float openT);
@@ -63,6 +64,7 @@ private:
     float rowCombo(Render2D& r, float x, float y, float w, const std::string& label,
                    int* idx, const char* const* opts, int n);
     float rowColor(Render2D& r, float x, float y, float w, const std::string& label, Color c);
-    float rowButton(Render2D& r, float x, float y, float w, const std::string& label, bool primary);
+    float rowButton(Render2D& r, float x, float y, float w, const std::string& label,
+                    bool primary, bool* clicked = nullptr);
     float rowListItem(Render2D& r, float x, float y, float w, const std::string& label, int idx);
 };

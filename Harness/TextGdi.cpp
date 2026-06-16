@@ -16,7 +16,7 @@
 
 namespace {
 
-int pxForScale(int scale) { return scale <= 1 ? 11 : (scale == 2 ? 16 : 22); }
+int pxForScale(int scale) { return scale <= 1 ? 11 : (scale == 2 ? 16 : (scale == 3 ? 22 : 38)); }
 
 std::wstring to_utf16(const std::string& s) {
     if (s.empty()) return L"";
@@ -33,8 +33,8 @@ struct GdiText {
     HBITMAP bmp = nullptr;
     uint8_t* bits = nullptr;
     int W = 256, H = 64;
-    HFONT fonts[3] = {nullptr, nullptr, nullptr};   // 11 / 16 / 22 px
-    int cellH[3] = {11, 16, 22};
+    HFONT fonts[4] = {nullptr, nullptr, nullptr, nullptr};   // 11 / 16 / 22 / 38 px
+    int cellH[4] = {11, 16, 22, 38};
     int curIdx = -1;
     std::unordered_map<uint64_t, CGlyph> glyphs;
     bool ok = false;
@@ -52,8 +52,8 @@ struct GdiText {
         bmp = CreateDIBSection(dc, &bi, DIB_RGB_COLORS, (void**)&bits, nullptr, 0);
         if (!bmp) return;
         SelectObject(dc, bmp);
-        const int sizes[3] = {11, 16, 22};
-        for (int i = 0; i < 3; ++i) {
+        const int sizes[4] = {11, 16, 22, 38};
+        for (int i = 0; i < 4; ++i) {
             fonts[i] = CreateFontA(-sizes[i], 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                 ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Verdana");
@@ -67,7 +67,7 @@ struct GdiText {
         ok = true;
     }
 
-    int idxForScale(int scale) { return scale <= 1 ? 0 : (scale == 2 ? 1 : 2); }
+    int idxForScale(int scale) { return scale <= 1 ? 0 : (scale == 2 ? 1 : (scale == 3 ? 2 : 3)); }
 
     const CGlyph* glyph(int idx, uint32_t cp) {
         uint64_t key = ((uint64_t)idx << 32) | cp;

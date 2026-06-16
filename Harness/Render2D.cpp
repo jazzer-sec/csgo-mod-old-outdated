@@ -53,7 +53,7 @@ FontFace& font() { static FontFace f; return f; }
 
 // "scale" maps to a pixel size so existing call sites keep working:
 // 1 = body (Verdana-11-ish), 2 = heading, 3 = wordmark.
-int pxForScale(int scale) { return scale <= 1 ? 11 : (scale == 2 ? 16 : 22); }
+int pxForScale(int scale) { return scale <= 1 ? 11 : (scale == 2 ? 16 : (scale == 3 ? 22 : 38)); }
 
 // Decode a UTF-8 string into Unicode codepoints so we can render non-ASCII
 // (arrows, Cyrillic, etc.) through FreeType's Unicode charmap.

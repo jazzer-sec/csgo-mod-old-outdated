@@ -12,8 +12,8 @@
 struct ImDrawList;
 struct ImFont;
 
-// Wire fonts (body=11px, head=16px, word=22px) after the ImGui atlas is built.
-void R2DImguiSetFonts(ImFont* body, ImFont* head, ImFont* word);
+// Wire fonts (body=11, head=16, word=22, title=38 px) after the atlas is built.
+void R2DImguiSetFonts(ImFont* body, ImFont* head, ImFont* word, ImFont* title);
 
 class Render2D {
 public:
