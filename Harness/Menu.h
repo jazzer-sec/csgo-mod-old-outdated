@@ -1,5 +1,6 @@
 #pragma once
 #include "Render2D.h"
+#include "Anim.h"
 #include <string>
 
 // Menu — premium legacy-HvH menu: left sidebar (logo + vertical nav), content
@@ -19,6 +20,7 @@ public:
     bool  comboOpen = false;   // legacy PNG dropdown demo only
     int   selectedConfig = 0;
     Input input;               // set each frame by the app; default = no interaction
+    float frameDt = 0.f;       // set by the app for in-menu animation (0 = static)
 
     // openT: 0 closed, 1 open (fade + slide-in). Interaction only when settled.
     void Draw(Render2D& r, float openT);
@@ -31,6 +33,8 @@ private:
     float Y(float y) const { return y + oy; }
 
     float comboAY = 0.f; // y of the rage "target" combo, for the demo dropdown
+    Anim  navHi;         // animated y of the active-tab highlight (glides on switch)
+    bool  navInit = false;
 
     // hit-test a rect in screen space (accounts for the open-slide offset)
     bool hot(float x, float y, float w, float h) const {

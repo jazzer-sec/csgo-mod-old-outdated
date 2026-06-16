@@ -37,8 +37,9 @@ int main() {
     app_frame(r, st, mouse(290, 290, true, true), false, 0.016f);
     CHECK(st.menu.activeTab == 1, "clicking a sidebar tab switches the page");
 
-    // render one settled frame to a PNG for a visual sanity check
-    app_frame(r, st, mouse(0, 0, false, false), false, 0.016f);
+    // let the tab-highlight glide finish, then snapshot for a visual sanity check
+    for (int i = 0; i < 12; ++i)
+        app_frame(r, st, mouse(0, 0, false, false), false, 0.05f);
     r.savePNG("App/out/standalone_frame.png");
     std::printf("wrote App/out/standalone_frame.png\n");
 

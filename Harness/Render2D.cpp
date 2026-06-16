@@ -1,8 +1,14 @@
 #include "Render2D.h"
 #include "PngWriter.h"
+#include <cmath>
+
+// Text backend selection:
+//   - Windows build: GDI (system Verdana) lives in TextGdi.cpp; this file's
+//     FreeType path is compiled out so the .exe needs no FreeType DLL.
+//   - Linux/macOS build: FreeType path below.
+#ifndef _WIN32
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include <cmath>
 
 // Antialiased text via FreeType, using DejaVu Sans as a Verdana stand-in
 // (Verdana is proprietary / not present; DejaVu is the closest free analog —
@@ -209,6 +215,7 @@ void Render2D::Text(float x, float y, const std::string& s, Color c, int scale)
         pen += g->advance.x >> 6;
     }
 }
+#endif // !_WIN32
 
 bool Render2D::savePNG(const std::string& path) const
 {

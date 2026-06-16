@@ -107,6 +107,7 @@ inline void app_frame(Render2D& r, AppState& st, const Menu::Input& in,
         r.BoxFilled(0, 0, (float)r.width(), (float)r.height(),
                     Color(0, 0, 0, (int)(120 * std::clamp(st.open.cur, 0.f, 1.f))));
         st.menu.input = in;
+        st.menu.frameDt = dt;
         st.menu.Draw(r, st.open.cur);
     }
 }

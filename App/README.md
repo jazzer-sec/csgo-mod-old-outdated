@@ -18,7 +18,24 @@ watch the decisions react live.
 
 ## Build
 
-Needs **SDL2** + **FreeType**. On Windows use MSYS2 (MINGW64 shell):
+### Windows — single self-contained .exe (recommended, no extra libs)
+
+The Win32/GDI build (`main_win32.cpp`) uses only Windows system DLLs, so the
+result is one double-clickable file with no SDL/FreeType to ship. With MinGW
+(MSYS2 MINGW64 shell, or a cross toolchain):
+
+```sh
+x86_64-w64-mingw32-g++ -std=c++17 -O2 -mwindows App/main_win32.cpp \
+  Harness/Render2D.cpp Harness/TextGdi.cpp Harness/Hud.cpp Harness/Menu.cpp \
+  -lgdi32 -luser32 -static -static-libgcc -static-libstdc++ -o jazzhook.exe
+```
+
+(On a native MSYS2 shell drop the `x86_64-w64-mingw32-` prefix.)
+
+### Cross-platform — SDL2 build
+
+The SDL2 build (`main_sdl.cpp`) also runs on Linux/macOS. Needs **SDL2** +
+**FreeType**. On Windows use MSYS2 (MINGW64 shell):
 
 ```sh
 pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-SDL2 mingw-w64-x86_64-freetype \

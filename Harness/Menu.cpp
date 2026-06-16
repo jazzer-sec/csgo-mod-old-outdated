@@ -113,17 +113,25 @@ void Menu::sidebar(Render2D& r, float x, float y, float w, float h)
 
     // vertical nav
     float ty = y + 66, cellH = 38;
+    // handle clicks first so the highlight animates to the new tab this frame
+    for (int i = 0; i < kTabCount; ++i) {
+        float cy = ty + i * cellH;
+        if (hot(x + 10, cy + 3, w - 20, cellH - 6) && input.clicked) activeTab = i;
+    }
+    // glide the active highlight toward the selected cell
+    float targetHi = ty + activeTab * cellH;
+    if (!navInit) { navHi.snap(targetHi); navInit = true; }
+    navHi.set(targetHi);
+    navHi.step(frameDt);
+    r.RoundedBox(x + 10, Y(navHi.cur + 3), w - 20, cellH - 6, 4, C(t.accent.withA(22)));
+    r.RoundedBox(x + 10, Y(navHi.cur + 7), 2.5f, cellH - 14, 1.5f, C(t.accent));
+
     for (int i = 0; i < kTabCount; ++i) {
         float cy = ty + i * cellH;
         bool active = (i == activeTab);
         bool over = hot(x + 10, cy + 3, w - 20, cellH - 6);
-        if (over && input.clicked) { activeTab = i; active = true; }
-        if (active) {
-            r.RoundedBox(x + 10, Y(cy + 3), w - 20, cellH - 6, 4, C(t.accent.withA(22)));
-            r.RoundedBox(x + 10, Y(cy + 7), 2.5f, cellH - 14, 1.5f, C(t.accent));
-        } else if (over) {
+        if (over && !active)
             r.RoundedBox(x + 10, Y(cy + 3), w - 20, cellH - 6, 4, C(t.accent.withA(10)));
-        }
         Color c = active ? t.accent : t.textDim;
         icon(r, i, x + 28, Y(cy + cellH / 2.f), c);
         r.TextLMid(x + 44, Y(cy + cellH / 2.f), kTabs[i], active ? C(t.text) : C(t.textDim), 1);
